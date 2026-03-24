@@ -46,13 +46,7 @@ const Login = () => {
             position: 'relative',
             overflow: 'hidden',
         }} className="login-container">
-            {/* Background decorations */}
-            <div className="stars-container">
-                <div className="stars-1"></div>
-                <div className="stars-2"></div>
-                <div className="stars-3"></div>
-            </div>
-            <div className="wireframe-grid"></div>
+            {/* Background decorations removed */}
 
             <div className="glass-panel" style={{
                 padding: '3rem',
@@ -156,7 +150,7 @@ const Login = () => {
                         disabled={loading}
                     >
                         {/* Conditional rendering inside JSX */}
-                        {loading ? 'PROCESSING...' : 'LOGIN'}
+                        {loading ? 'LOGGING IN...' : 'LOGIN'}
                     </button>
                 </form>
 

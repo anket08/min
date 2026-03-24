@@ -1,298 +1,172 @@
 /* ========================================================================
-   MODULE 1: CSS — Linking External Style Sheets
-   ========================================================================
-   This file is an EXTERNAL STYLE SHEET linked via: import './index.css'
-   Topics covered: CSS Variables, Box Model, Positioning, Media Queries,
-                   Text Shadows, Box Shadows, Backgrounds, Element Dimensions,
-                   Text Flow, Selectors, Animations, Transitions
+   SOFT MINIMALIST AESTHETIC CSS (Less Eye-Stressing)
    ======================================================================== */
 
-/* ========================================================================
-   CSS VARIABLES (Custom Properties)
-   Defined in :root so they're available EVERYWHERE
-   Usage: var(--variable-name)
-   ======================================================================== */
 :root {
-  --background: #000000;
-  --surface: #000000;
-  --primary: #efa91cc6;        /* Main brand color (gold) */
-  --primary-glow: rgb(203, 160, 85);
-  --secondary: #6e5034;
-  --text: #eda73fd8;
-  --text-muted: #b19c86;
-  --border: #3d2f25;
-  --accent: #755435;
-  --danger: #ef4444;
-  --success: #22c55e;
-  --warning: #d4b57e;
-  --input-bg: #1a1510;
+  --background: #0d1117;
+  --surface: #161b22;
+  --primary: #58a6ff;
+  --primary-hover: #79c0ff;
+  --text: #c9d1d9;
+  --text-muted: #8b949e;
+  --border: #30363d;
+  --danger: #f85149;
+  --success: #3fb950;
+  --warning: #d29922;
+  --input-bg: #0d1117;
 }
 
-/* ========================================================================
-   MEDIA QUERIES + THEME SELECTOR
-   body.light-theme = applies when JavaScript adds 'light-theme' class to body
-   This is a CSS SELECTOR (class selector on body element)
-   ======================================================================== */
 body.light-theme {
-  --background: #F8F5EF;
-  --surface: #FFFFFF;
-  --primary: #C89B3C;
-  --primary-hover: #A67C2E;
-  --primary-glow: rgba(200, 155, 60, 0.4);
-  --secondary: #9CA3AF;
-  --text: #1F2933;
-  --text-muted: #6B7280;
-  --input-bg: #F3EFE7;
-  --border: #E5D7B8;
-  --accent: #C89B3C;
-  --danger: #dc2626;
-  --success: #16a34a;
-  --warning: #C89B3C;
+  --background: #f6f8fa;
+  --surface: #ffffff;
+  --primary: #0969da;
+  --primary-hover: #0352ae;
+  --text: #24292f;
+  --text-muted: #57606a;
+  --input-bg: #f6f8fa;
+  --border: #d0d7de;
+  --danger: #cf222e;
+  --success: #1a7f37;
+  --warning: #9a6700;
 }
 
-/* ========================================================================
-   BOX MODEL — Every HTML element is a box with:
-   content → padding → border → margin
-   box-sizing: border-box = padding & border are INCLUDED in width/height
-   ======================================================================== */
 * {
-  box-sizing: border-box;  /* Makes sizing predictable */
-  margin: 0;               /* Remove default margins */
-  padding: 0;              /* Remove default padding */
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-/* ========================================================================
-   BACKGROUNDS, ELEMENT DIMENSIONS, TEXT FLOW
-   ======================================================================== */
 body {
   margin: 0;
-  font-family: 'Inter', sans-serif;        /* Font family */
-  background-color: var(--background);      /* Background color using CSS variable */
-  color: var(--text);                       /* Text color */
-  overflow-x: hidden;                       /* Hide horizontal scrollbar (text flow) */
-  -webkit-font-smoothing: antialiased;      /* Smoother text rendering */
-}
-
-/* ========================================================================
-   POSITIONING — fixed, absolute, relative, sticky
-   position: fixed = stays in place even when scrolling
-   ======================================================================== */
-.stars-container {
-  position: fixed;     /* Fixed positioning — doesn't move on scroll */
-  top: 0;
-  left: 0;
-  width: 100%;         /* Element Dimensions — full viewport width */
-  height: 100%;        /* Full viewport height */
-  overflow: hidden;
-  z-index: 0;          /* Stacking order */
-  pointer-events: none; /* Click-through */
-}
-
-/* SELECTOR: body.light-theme .stars-container
-   This is a DESCENDANT SELECTOR — selects .stars-container inside body.light-theme */
-body.light-theme .stars-container {
-  display: none;
-}
-
-/* BACKGROUND with radial-gradient (decorative star effect) */
-.stars-1,
-.stars-2,
-.stars-3 {
-  position: absolute;  /* Absolute positioning — relative to nearest positioned parent */
-  top: 0;
-  left: 0;
-  width: 200%;
-  height: 200%;
-  background-repeat: repeat;
-  animation: moveStars 100s linear infinite;  /* CSS Animation */
-}
-
-.stars-1 {
-  background-image: radial-gradient(1px 1px at 20px 30px, #d4b57e, transparent),
-    radial-gradient(1px 1px at 100px 50px, #fff, transparent),
-    radial-gradient(1px 1px at 50px 180px, #d4b57e, transparent);
-  background-size: 200px 200px;
-  opacity: 0.6;
-  animation-duration: 50s;
-}
-
-.stars-2 {
-  background-image: radial-gradient(1.5px 1.5px at 100px 100px, #fff, transparent),
-    radial-gradient(1.5px 1.5px at 50px 20px, #fff, transparent);
-  background-size: 300px 300px;
-  opacity: 0.5;
-  animation-duration: 100s;
-}
-
-.stars-3 {
-  background-image: radial-gradient(2px 2px at 150px 150px, #fff, transparent);
-  background-size: 400px 400px;
-  opacity: 0.4;
-  animation-duration: 150s;
-}
-
-/* CSS ANIMATION — @keyframes define the animation steps */
-@keyframes moveStars {
-  from { transform: translateY(0); }
-  to { transform: translateY(-500px); }
-}
-
-/* ========================================================================
-   3D CSS TRANSFORMS (perspective, rotateX, rotateY, translateZ)
-   ======================================================================== */
-.polygon-container {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);  /* Center using transform */
-  width: 400px;
-  height: 400px;
-  perspective: 1000px;               /* 3D perspective depth */
-  z-index: -1;
-  pointer-events: none;
-}
-
-body.light-theme .polygon-container { display: none; }
-
-.polygon {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  transform-style: preserve-3d;      /* Allows children to exist in 3D space */
-  animation: rotatePolygon 20s linear infinite;
-}
-
-.polygon-face {
-  position: absolute;
-  width: 200px;
-  height: 200px;
-  border: 1px solid rgba(212, 181, 126, 0.3);
-  background: rgba(110, 80, 52, 0.05);
-  top: 50%;
-  left: 50%;
-  transform-origin: center;
-}
-
-/* Each face rotated differently in 3D space */
-.f1 { transform: translate(-50%, -50%) rotateY(0deg) translateZ(150px); }
-.f2 { transform: translate(-50%, -50%) rotateY(60deg) translateZ(150px); }
-.f3 { transform: translate(-50%, -50%) rotateY(120deg) translateZ(150px); }
-.f4 { transform: translate(-50%, -50%) rotateY(180deg) translateZ(150px); }
-.f5 { transform: translate(-50%, -50%) rotateY(240deg) translateZ(150px); }
-.f6 { transform: translate(-50%, -50%) rotateY(300deg) translateZ(150px); }
-.f7 { transform: translate(-50%, -50%) rotateX(90deg) translateZ(150px); }
-.f8 { transform: translate(-50%, -50%) rotateX(-90deg) translateZ(150px); }
-.f9 { transform: translate(-50%, -50%) rotateX(45deg) rotateY(45deg) translateZ(150px); }
-.f10 { transform: translate(-50%, -50%) rotateX(-45deg) rotateY(-45deg) translateZ(150px); }
-
-@keyframes rotatePolygon {
-  0% { transform: rotateX(0deg) rotateY(0deg); }
-  100% { transform: rotateX(360deg) rotateY(360deg); }
-}
-
-/* ========================================================================
-   TYPOGRAPHY — Headings (h1-h5)
-   Topics: Headings (HTML5), font-weight, letter-spacing
-   ======================================================================== */
-h1, h2, h3, h4, h5 {
-  font-weight: 800;
+  font-family: 'Inter', Helvetica, sans-serif;
+  background-color: var(--background);
   color: var(--text);
-  letter-spacing: -0.04em;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  
+  /* Soft glowing animated radial gradient background for the whole app */
+  background-image: radial-gradient(circle at 15% 50%, rgba(88, 166, 255, 0.04), transparent 25%),
+                    radial-gradient(circle at 85% 30%, rgba(88, 166, 255, 0.04), transparent 25%);
+  animation: bg-pulse 15s ease-in-out infinite alternate;
+}
+
+@keyframes bg-pulse {
+  0% { background-position: 0% 0%; }
+  100% { background-position: 100% 100%; }
+}
+
+h1, h2, h3, h4, h5 {
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.02em;
 }
 
 .font-mono {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: monospace;
 }
 
-/* ========================================================================
-   UTILITY CLASSES — Reusable CSS classes
-   display: flex = Flexbox layout (modern way to align elements)
-   ======================================================================== */
 .flex-center {
   display: flex;
-  align-items: center;      /* Vertical center */
-  justify-content: center;  /* Horizontal center */
+  align-items: center;
+  justify-content: center;
 }
 
 .container {
-  max-width: 1200px;         /* Element Dimensions — max width */
-  margin: 0 auto;            /* Center horizontally using auto margins */
-  padding: 0 2rem;           /* Padding (part of Box Model) */
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
   position: relative;
   z-index: 1;
 }
 
-/* SELECTORS: .nav-link = class selector */
 .nav-link {
-  text-decoration: none;                 /* Remove underline from links */
-  transition: color 0.3s ease;           /* Smooth color transition on hover */
+  text-decoration: none;
+  transition: all 0.2s ease;
+  color: var(--text-muted);
 }
 
-/* PSEUDO-CLASS SELECTOR: :hover = when mouse is over the element */
 .nav-link:hover {
   color: var(--primary) !important;
+  text-shadow: 0 0 10px rgba(88, 166, 255, 0.3);
 }
 
-/* ========================================================================
-   BUTTONS — Inline Styles vs Classes
-   These use CLASS selectors (.btn, .btn-primary, .btn-secondary)
-   ======================================================================== */
+/* BUTTONS */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.75rem 1.5rem;              /* Box Model: padding */
-  border-radius: 4px;                   /* Rounded corners */
-  font-weight: 800;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 500;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);  /* Smooth transition */
+  transition: all 0.2s ease;
   text-decoration: none;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  border: none;                          /* Box Model: border */
-  position: relative;
-  overflow: hidden;
+  border: 1px solid transparent;
 }
 
-/* ========================================================================
-   BOX SHADOWS — Adds shadow effects around elements
-   box-shadow: x-offset y-offset blur spread color
-   ======================================================================== */
 .btn-primary {
   background: var(--primary);
-  color: #000;
-  border: 1px solid var(--primary);
-  box-shadow: 0 0 15px rgba(212, 181, 126, 0.3);  /* BOX SHADOW */
+  color: #ffffff;
+}
+
+body.light-theme .btn-primary {
+  color: #ffffff;
 }
 
 .btn-primary:hover {
   background: var(--primary-hover);
-  border-color: var(--primary-hover);
-  color: #fff;
-  box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);   /* BOX SHADOW on hover */
-  transform: translateY(-2px);                       /* Move up on hover */
+  box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
+  transform: translateY(-1px);
 }
 
 .btn-secondary {
   background: transparent;
   color: var(--primary);
-  border: 1px solid var(--primary);
+  border: 1px solid var(--border);
 }
 
 .btn-secondary:hover {
-  background: var(--primary);
-  color: #000;
   border-color: var(--primary);
-  box-shadow: 0 0 25px rgba(245, 158, 11, 0.4);
+  color: var(--primary-hover);
 }
 
-/* ========================================================================
-   CSS ANIMATIONS — @keyframes + animation property
-   ======================================================================== */
+/* SOFT GLASS PANEL */
+.glass-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.glass-panel:hover {
+  box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+}
+
+body.light-theme .glass-panel {
+  box-shadow: 0 8px 24px rgba(140,149,159,0.15);
+}
+
+body.light-theme .glass-panel:hover {
+  box-shadow: 0 12px 32px rgba(140,149,159,0.25);
+}
+
+/* CARDS / CONTAINERS */
+.card {
+  padding: 2em;
+}
+
+/* REMOVED CLASSES (for safety) */
+.stars-container, .stars-1, .stars-2, .stars-3, 
+.polygon-container, .wireframe-grid {
+  display: none !important;
+}
+
 .page-transition {
-  animation: fadeInMove 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: transform, opacity;  /* Performance hint for browser */
+  animation: fadeInMove 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
 }
 
 @keyframes fadeInMove {
@@ -304,56 +178,4 @@ h1, h2, h3, h4, h5 {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
-}
-
-@keyframes glow {
-  0%, 100% { filter: drop-shadow(0 0 10px rgba(212, 181, 126, 0.3)); }
-  50% { filter: drop-shadow(0 0 25px rgba(212, 181, 126, 0.6)); }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
-}
-
-.animate-glow { animation: glow 3s infinite; }
-.animate-float { animation: float 6s ease-in-out infinite; }
-
-/* ========================================================================
-   BACKGROUNDS — Using CSS gradients as background
-   background-image: linear-gradient(...)
-   ======================================================================== */
-.wireframe-grid {
-  background-size: 40px 40px;
-  background-image:
-    linear-gradient(to right, rgba(212, 181, 126, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(212, 181, 126, 0.05) 1px, transparent 1px);
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-  mask-image: radial-gradient(circle at center, black 60%, transparent 95%);
-  -webkit-mask-image: radial-gradient(circle at center, black 60%, transparent 95%);
-}
-
-/* ========================================================================
-   GLASS PANELS — backdrop-filter: blur() creates glass/frosted effect
-   This is an example of modern CSS techniques
-   ======================================================================== */
-.glass-panel {
-  background: rgba(10, 10, 10, 0.7);
-  backdrop-filter: blur(12px);        /* Glass blur effect */
-  border: 1px solid var(--border);
-  border-radius: 0;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);  /* BOX SHADOW */
-  color: var(--text);
-}
-
-/* Theme-specific override using compound selector */
-body.light-theme .glass-panel {
-  background: #ffffff;
-  box-shadow: 0 10px 30px rgba(74, 59, 50, 0.1);
-  border-color: var(--border);
 }

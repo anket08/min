@@ -46,12 +46,7 @@ const Register = () => {
             position: 'relative',
             overflow: 'hidden'
         }} className="login-container">
-            <div className="stars-container">
-                <div className="stars-1"></div>
-                <div className="stars-2"></div>
-                <div className="stars-3"></div>
-            </div>
-            <div className="wireframe-grid"></div>
+            {/* Background decorations removed */}
 
             <div className="glass-panel" style={{
                 padding: '3rem',
@@ -68,7 +63,7 @@ const Register = () => {
                         color: 'var(--primary)',
                         fontWeight: '900'
                     }}>JOIN MINIT</h1>
-                    <p style={{ opacity: 0.7, fontSize: '0.9rem', letterSpacing: '0.05em' }}>Create your system access account</p>
+                    <p style={{ opacity: 0.7, fontSize: '0.9rem', letterSpacing: '0.05em' }}>Create your account</p>
                 </div>
 
                 {/* Conditional Rendering — show error message if exists */}
@@ -197,7 +192,7 @@ const Register = () => {
                         {loading ? (
                             <>
                                 <Loader size={18} style={{ marginRight: '0.5rem', animation: 'rotate 1s linear infinite' }} />
-                                MAKING ACCOUNT...
+                                CREATING ACCOUNT...
                             </>
                         ) : (
                             <>

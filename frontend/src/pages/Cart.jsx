@@ -67,10 +67,7 @@ const Cart = () => {
 
     return (
         <div className="container" style={{ paddingTop: '80px' }}>
-            <div className="stars-container">
-                <div className="stars-1"></div>
-                <div className="stars-2"></div>
-            </div>
+            {/* Background decorations removed */}
             <div className="glass-panel" style={{ padding: '2rem', maxWidth: '900px', margin: '0 auto', border: '1px solid var(--border)' }}>
                 <h2 style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)' }}>
                     <ShoppingBag size={28} /> Shopping Cart

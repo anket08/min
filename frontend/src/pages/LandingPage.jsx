@@ -14,13 +14,7 @@ const LandingPage = () => {
         // Main container — acts like a full-page layout
         <div style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
 
-            {/* ===== BACKGROUND ELEMENTS ===== */}
-            <div className="stars-container">
-                <div className="stars-1"></div>
-                <div className="stars-2"></div>
-                <div className="stars-3"></div>
-            </div>
-            <div className="wireframe-grid"></div>
+            {/* ===== BACKGROUND ELEMENTS REMOVED FOR MINIMALISM ===== */}
 
             {/* ===== HTML5 PAGE STRUCTURE: <nav> ===== */}
             {/* <nav> = semantic HTML5 element for navigation */}
@@ -41,21 +35,7 @@ const LandingPage = () => {
                 </div>
             </nav>
 
-            {/* ===== 3D Polygon Background ===== */}
-            <div className="polygon-container">
-                <div className="polygon">
-                    <div className="polygon-face f1"></div>
-                    <div className="polygon-face f2"></div>
-                    <div className="polygon-face f3"></div>
-                    <div className="polygon-face f4"></div>
-                    <div className="polygon-face f5"></div>
-                    <div className="polygon-face f6"></div>
-                    <div className="polygon-face f7"></div>
-                    <div className="polygon-face f8"></div>
-                    <div className="polygon-face f9"></div>
-                    <div className="polygon-face f10"></div>
-                </div>
-            </div>
+            {/* ===== 3D Polygon Background REMOVED ===== */}
 
             {/* ===== HTML5 PAGE STRUCTURE: <main> ===== */}
             {/* <main> = semantic HTML5 element for the main content of the page */}
@@ -72,19 +52,16 @@ const LandingPage = () => {
             }}>
                 {/* Status badge */}
                 <div style={{
-                    border: '1px solid var(--border)',
                     padding: '0.5rem 1rem',
-                    borderRadius: '20px',
-                    background: 'rgba(20, 20, 20, 0.6)',
+                    background: 'var(--surface)',
                     marginBottom: '2rem',
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: '0.5rem',
-                    backdropFilter: 'blur(5px)'
+                    borderRadius: '20px',
+                    gap: '0.5rem'
                 }}>
-                    <div style={{ width: '6px', height: '6px', background: 'var(--success)', borderRadius: '50%', boxShadow: '0 0 10px var(--success)' }}></div>
-                    <span className="font-mono" style={{ fontSize: '0.75rem', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>
-                        V1.0 (BETA) // SYSTEM NOMINAL
+                    <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)', letterSpacing: '0.02em', fontWeight: '500' }}>
+                        For the students, by the students
                     </span>
                 </div>
 
@@ -98,17 +75,16 @@ const LandingPage = () => {
                     position: 'relative',
                     zIndex: 2,
                     textTransform: 'uppercase',
-                    color: 'var(--primary)',
-                    textShadow: '0 0 50px rgba(245, 158, 11, 0.3)'  // TEXT SHADOW
+                    color: 'var(--text)'
                 }}>
                     MINIT
                 </h1>
 
                 {/* Subtext */}
-                <div style={{ marginTop: '2rem', maxWidth: '600px', backdropFilter: 'blur(3px)' }}>
+                <div style={{ marginTop: '2rem', maxWidth: '600px' }}>
                     <p style={{ fontSize: '1.25rem', color: 'var(--text-muted)', lineHeight: '1.5' }}>
-                        The accountability engine for campus essentials.<br />
-                        <span style={{ color: 'var(--text)', fontWeight: '600' }}>Cold. Mechanical. Honest.</span>
+                        Your trusted platform for campus essentials.<br />
+                        <span style={{ color: 'var(--text)', fontWeight: '500' }}>Simple. Reliable. Yours.</span>
                     </p>
                 </div>
 
@@ -125,17 +101,15 @@ const LandingPage = () => {
                 </div>
             </main>
 
-            {/* ===== HTML5 PAGE STRUCTURE: <footer> ===== */}
-            {/* <footer> = semantic HTML5 element for page footer */}
             <footer style={{
                 padding: '2rem',
                 textAlign: 'center',
                 color: 'var(--text-muted)',
-                fontSize: '0.8rem',
+                fontSize: '0.85rem',
                 borderTop: '1px solid var(--border)'
             }}>
-                <div className="font-mono">
-                    SYSTEM STATUS: OPTIMAL • LATENCY: 12MS • ENCRYPTION: 256-BIT
+                <div>
+                    &copy; {new Date().getFullYear()} MINIT. All rights reserved.
                 </div>
             </footer>
         </div>

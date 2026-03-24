@@ -90,12 +90,7 @@ const StudentDashboard = () => {
 
     return (
         <div style={{ position: 'relative', minHeight: '100vh', paddingTop: '30px', paddingBottom: '2rem' }}>
-            <div className="stars-container">
-                <div className="stars-1"></div>
-                <div className="stars-2"></div>
-                <div className="stars-3"></div>
-            </div>
-            <div className="wireframe-grid"></div>
+            {/* Background decorations removed */}
 
             {/* ===== TOAST NOTIFICATION — shows when item is added ===== */}
             {toast && (
@@ -130,12 +125,11 @@ const StudentDashboard = () => {
                     marginBottom: '3rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem'
                 }}>
                     <div>
-                        <h2 style={{ fontSize: '2rem', textTransform: 'uppercase', letterSpacing: '-0.02em', marginBottom: '0.25rem' }}>
-                            Supply Terminal
+                        <h2 style={{ fontSize: '2rem', fontWeight: '600', letterSpacing: '-0.02em', marginBottom: '0.25rem' }}>
+                            Available Products
                         </h2>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <div style={{ width: '6px', height: '6px', background: 'var(--success)', borderRadius: '50%', boxShadow: '0 0 10px var(--success)' }}></div>
-                            <span className="font-mono" style={{ fontSize: '0.8rem', color: '#888', letterSpacing: '0.05em' }}>SYSTEM ONLINE // STOCK UPDATED</span>
+                            <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Live Inventory</span>
                         </div>
                     </div>
                 </div>
@@ -149,7 +143,7 @@ const StudentDashboard = () => {
                     <div style={{ flex: 1, minWidth: '250px', position: 'relative' }}>
                         <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: '#666' }} />
                         <input
-                            type="text" placeholder="SEARCH INVENTORY..."
+                            type="text" placeholder="Search products..."
                             value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                             style={{
                                 paddingLeft: '3rem', width: '100%',
@@ -262,8 +256,8 @@ const StudentDashboard = () => {
                 {!loading && filteredProducts.length === 0 && (
                     <div className="flex-center" style={{ padding: '6rem', flexDirection: 'column', border: '1px dashed var(--border)', marginTop: '2rem' }}>
                         <div style={{ fontSize: '2rem', marginBottom: '1rem', opacity: 0.5 }}>⚠️</div>
-                        <h3 style={{ textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--text-muted)' }}>No Inventory Found</h3>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', fontFamily: 'JetBrains Mono' }}>System returned 0 results</p>
+                        <h3 style={{ letterSpacing: '0.02em', color: 'var(--text)' }}>No Products Found</h3>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Try adjusting your search or category filter.</p>
                     </div>
                 )}
             </div>
