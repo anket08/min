@@ -1,0 +1,110 @@
+﻿curl.exe : Note: 
+Unnecessary use of -X or 
+--request, POST is 
+already inferred.
+At line:1 char:1
++ curl.exe -v -H 
+"Content-Type: 
+application/json" -d "{ 
+`"email`": `"te ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: (N  
+  ote: Unnecessa...read   
+ y inferred.:String) [    
+], RemoteException
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+* Host localhost:5000 was 
+resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+  % Total    % Received % 
+Xferd  Average Speed  
+Time    Time    Time   
+Current
+                          
+       Dload  Upload  
+Total   Spent   Left   
+Speed
+
+  0      0   0      0   0 
+     0      0      0      
+                        
+0*   Trying [::1]:5000...
+* Established connection 
+to localhost (::1 port 
+5000) from ::1 port 65106 
+* using HTTP/1.x
+> POST /api/auth/login 
+HTTP/1.1
+
+> Host: localhost:5000
+
+> User-Agent: curl/8.18.0
+
+> Accept: */*
+
+> Content-Type: 
+application/json
+
+> Content-Length: 39
+
+> 
+
+} [39 bytes data]
+* upload completely sent 
+off: 39 bytes
+< HTTP/1.1 400 Bad Request
+
+< x-powered-by: Express
+
+< Access-Control-Allow-Ori
+gin: *
+
+< 
+content-security-policy: 
+default-src 'none'
+
+< x-content-type-options: 
+nosniff
+
+< content-type: 
+text/html; charset=utf-8
+
+< content-length: 944
+
+< date: Sat, 04 Apr 2026 
+22:52:18 GMT
+
+< connection: close
+
+< 
+
+{ [944 bytes data]
+
+100    983 100    944 100 
+    39 104.4k   4418      
+                        0
+100    983 100    944 100 
+    39 102.5k   4338      
+                        0
+100    983 100    944 100 
+    39 101.2k   4283      
+                        0
+* shutting down 
+connection #0
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>SyntaxError: Expected property name or &#39;}&#39; in JSON at position 2<br> &nbsp; &nbsp;at JSON.parse (&lt;anonymous&gt;)<br> &nbsp; &nbsp;at parse (/app/node_modules/body-parser/lib/types/json.js:72:19)<br> &nbsp; &nbsp;at /app/node_modules/body-parser/lib/read.js:162:18<br> &nbsp; &nbsp;at AsyncResource.runInAsyncScope (node:async_hooks:206:9)<br> &nbsp; &nbsp;at invokeCallback (/app/node_modules/raw-body/index.js:238:16)<br> &nbsp; &nbsp;at done (/app/node_modules/raw-body/index.js:227:7)<br> &nbsp; &nbsp;at IncomingMessage.onEnd (/app/node_modules/raw-body/index.js:287:7)<br> &nbsp; &nbsp;at IncomingMessage.emit (node:events:524:28)<br> &nbsp; &nbsp;at endReadableNT (node:internal/streams/readable:1698:12)<br> &nbsp; &nbsp;at process.processTicksAndRejections (node:internal/process/task_queues:82:21)</pre>
+</body>
+</html>

@@ -1,4 +1,4 @@
-const { connectKafka, produceEvent, TOPICS } = require('./kafka');
+const { connectKafka, produceEvent, TOPICS } = require('../auth-service/src/config/kafka');
 
 (async () => {
   await connectKafka();
