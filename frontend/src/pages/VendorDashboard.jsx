@@ -1,338 +1,492 @@
-// ========================================================================
-// MODULE 2: React — CRUD UI, Form Processing, State, Graphs/Charts
-// MODULE 1: JavaScript — Objects, Functions, Event Handling, Ajax, JSON
-// ========================================================================
-
-import { useState, useEffect, useContext } from 'react';
+import { useState, useEffect, useContext, useMemo } from 'react';
 import axios from 'axios';
 import AuthContext from '../context/AuthContext';
-import { Plus, Edit, Trash, X, TrendingUp, Package, DollarSign, ShoppingBag, BarChart3 } from 'lucide-react';
+import { Plus, Edit, Trash, X, TrendingUp, Package, DollarSign, ShoppingBag, BarChart3, List } from 'lucide-react';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
 
 const VendorDashboard = () => {
     const { user } = useContext(AuthContext);
+
     const [products, setProducts] = useState([]);
-    const [showForm, setShowForm] = useState(false);
-    const [formData, setFormData] = useState({ name: '', price: '', category: '', description: '', stock: '', image: '' });
-    const [editingId, setEditingId] = useState(null);
-    const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' or 'products'
     const [salesData, setSalesData] = useState(null);
+
+    const [showForm, setShowForm] = useState(false);
+    const [editingId, setEditingId] = useState(null);
+    const [activeTab, setActiveTab] = useState('dashboard');
+
     const [loadingSales, setLoadingSales] = useState(true);
+    const [loadingAction, setLoadingAction] = useState(null);
 
-    const config = { headers: { Authorization: `Bearer ${user.token}` } };
+    const [formData, setFormData] = useState({
+        name: '',
+        price: '',
+        category: '',
+        description: '',
+        stock: '',
+        image: ''
+    });
 
-    // Fetch products
+    const config = {
+        headers: { Authorization: `Bearer ${user.token}` }
+    };
+
+    // ================= FETCH =================
+
     const fetchProducts = async () => {
         try {
             const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/products`);
             const myProducts = data.filter(p => p.vendor === user._id);
             setProducts(myProducts);
-        } catch (error) { console.error(error); }
+        } catch (err) {
+            console.error(err);
+        }
     };
 
-    // Fetch sales data
     const fetchSales = async () => {
         try {
             setLoadingSales(true);
             const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/orders/vendor-sales`, config);
             setSalesData(data);
-        } catch (error) { console.error(error); }
-        finally { setLoadingSales(false); }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoadingSales(false);
+        }
     };
 
-    useEffect(() => { fetchProducts(); fetchSales(); }, [user]);
+    // ================= POLLING =================
 
-    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadData = async () => {
+            if (!isMounted) return;
+
+            await Promise.all([
+                fetchProducts(),
+                fetchSales()
+            ]);
+        };
+
+        loadData();
+
+        const interval = setInterval(loadData, 5000); // Polling for fast updates
+
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
+    }, [user]);
+
+    // ================= MOCK CHART DATA =================
+    
+    // Generate a visual trend from the aggregates
+    // Real chart data from salesData
+    const revenueChartData = useMemo(() => {
+        if (!salesData || !salesData.salesByDate) return [];
+        
+        // Convert salesByDate object to sorted array
+        return Object.entries(salesData.salesByDate)
+            .map(([date, revenue]) => ({
+                name: date,
+                revenue: revenue
+            }))
+            .sort((a, b) => {
+                const [d1, m1, y1] = a.name.split('/');
+                const [d2, m2, y2] = b.name.split('/');
+                return new Date(y1, m1 - 1, d1) - new Date(y2, m2 - 1, d2);
+            });
+    }, [salesData]);
+
+    const productSalesData = useMemo(() => {
+        if (!salesData || !salesData.salesByProduct) return [];
+        
+        return Object.entries(salesData.salesByProduct).map(([name, data]) => ({
+            name,
+            sales: data.qty
+        })).sort((a, b) => b.sales - a.sales).slice(0, 5); // Top 5 products
+    }, [salesData]);
+
+    // ================= FORM =================
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         try {
+            setLoadingAction('form');
+
             if (editingId) {
                 await axios.put(`${import.meta.env.VITE_API_URL}/products/${editingId}`, formData, config);
             } else {
                 await axios.post(`${import.meta.env.VITE_API_URL}/products`, formData, config);
             }
+
             setShowForm(false);
-            setFormData({ name: '', price: '', category: '', description: '', stock: '', image: '' });
             setEditingId(null);
-            fetchProducts();
-            fetchSales();
-        } catch (error) { alert('Error saving product'); }
+            setFormData({ name: '', price: '', category: '', description: '', stock: '', image: '' });
+
+            await Promise.all([fetchProducts(), fetchSales()]);
+
+        } catch {
+            alert('Error saving product');
+        } finally {
+            setLoadingAction(null);
+        }
     };
 
     const handleEdit = (product) => {
-        setFormData({ name: product.name, price: product.price, category: product.category, description: product.description, stock: product.stock, image: product.image });
+        setFormData({
+            name: product.name || '',
+            price: product.price || '',
+            category: product.category || '',
+            description: product.description || '',
+            stock: product.stock || '',
+            image: product.image || ''
+        });
         setEditingId(product._id);
         setShowForm(true);
         setActiveTab('products');
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm('Are you sure?')) {
-            try {
-                await axios.delete(`${import.meta.env.VITE_API_URL}/products/${id}`, config);
-                fetchProducts();
-                fetchSales();
-            } catch (error) { alert('Error deleting product'); }
+        if (!window.confirm('Are you sure you want to delete this product?')) return;
+
+        try {
+            setLoadingAction(id);
+
+            await axios.delete(`${import.meta.env.VITE_API_URL}/products/${id}`, config);
+
+            await Promise.all([fetchProducts(), fetchSales()]);
+
+        } catch {
+            alert('Error deleting product');
+        } finally {
+            setLoadingAction(null);
         }
     };
 
-    // --- STAT CARD COMPONENT ---
-    const StatCard = ({ icon, label, value, color }) => (
-        <div className="glass-panel" style={{
-            padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem',
-            border: '1px solid var(--border)'
-        }}>
-            <div style={{
-                width: '48px', height: '48px', borderRadius: '12px',
-                background: `${color}15`, border: `1px solid ${color}40`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: color
-            }}>{icon}</div>
+    // ================= COMPONENTS =================
+
+    const StatCard = ({ icon, label, value, trendClass = "text-success" }) => (
+        <div className="glass-panel" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '1.2rem', flex: 1, minWidth: '200px' }}>
+            <div style={{ padding: '1rem', background: 'rgba(50, 205, 50, 0.1)', borderRadius: '12px', color: 'var(--primary)' }}>
+                {icon}
+            </div>
             <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: '800', color: 'var(--text)' }}>{value}</div>
+                <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500, marginBottom: '0.25rem' }}>{label}</div>
+                <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: 'var(--text)' }}>{value}</div>
             </div>
         </div>
     );
 
-    // --- BAR CHART (pure CSS) ---
-    const BarChart = ({ data, title }) => {
-        if (!data || Object.keys(data).length === 0) return <p style={{ color: 'var(--text-muted)' }}>No sales data yet</p>;
-        const maxVal = Math.max(...Object.values(data).map(d => d.qty || d));
-        return (
-            <div>
-                <h3 style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-                    <BarChart3 size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />{title}
-                </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                    {Object.entries(data).map(([name, val]) => {
-                        const qty = typeof val === 'object' ? val.qty : val;
-                        const revenue = typeof val === 'object' ? val.revenue : val;
-                        const width = maxVal > 0 ? (qty / maxVal) * 100 : 0;
-                        return (
-                            <div key={name}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                                    <span style={{ fontSize: '0.85rem', color: 'var(--text)' }}>{name}</span>
-                                    <span style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: '600' }}>
-                                        {typeof val === 'object' ? `${qty} sold • ₹${revenue}` : `₹${revenue}`}
-                                    </span>
-                                </div>
-                                <div style={{ height: '8px', background: 'var(--border)', borderRadius: '4px', overflow: 'hidden' }}>
-                                    <div style={{
-                                        height: '100%', width: `${width}%`,
-                                        background: 'linear-gradient(90deg, var(--primary), rgba(200,155,60,0.6))',
-                                        borderRadius: '4px', transition: 'width 1s ease'
-                                    }}></div>
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-        );
-    };
-
-    // --- REVENUE CHART (daily) ---
-    const RevenueChart = ({ data }) => {
-        if (!data || Object.keys(data).length === 0) return <p style={{ color: 'var(--text-muted)' }}>No revenue data yet</p>;
-        const entries = Object.entries(data);
-        const maxVal = Math.max(...Object.values(data));
-        return (
-            <div>
-                <h3 style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-                    <TrendingUp size={16} style={{ marginRight: '0.5rem', verticalAlign: 'middle' }} />Daily Revenue
-                </h3>
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '6px', height: '150px', padding: '0 0.5rem' }}>
-                    {entries.map(([date, value]) => {
-                        const height = maxVal > 0 ? (value / maxVal) * 100 : 0;
-                        return (
-                            <div key={date} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                <div style={{
-                                    fontSize: '0.65rem', color: 'var(--primary)', fontWeight: '600', marginBottom: '4px'
-                                }}>₹{value}</div>
-                                <div style={{
-                                    width: '100%', maxWidth: '40px',
-                                    height: `${Math.max(height, 5)}%`,
-                                    background: 'linear-gradient(180deg, var(--primary), rgba(200,155,60,0.3))',
-                                    borderRadius: '4px 4px 0 0',
-                                    transition: 'height 1s ease',
-                                    minHeight: '4px'
-                                }}></div>
-                                <div style={{ fontSize: '0.6rem', color: 'var(--text-muted)', marginTop: '6px', textAlign: 'center' }}>
-                                    {date.split('/').slice(0, 2).join('/')}
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
-        );
-    };
+    // ================= UI =================
 
     return (
-        <div className="container" style={{ paddingTop: '20px' }}>
-            <div className="glass-panel" style={{ padding: '2rem' }}>
-                {/* Header with tabs */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
-                    <h2>Vendor Dashboard</h2>
-                    <div style={{ display: 'flex', gap: '0.5rem' }}>
-                        <button className={`btn ${activeTab === 'dashboard' ? 'btn-primary' : 'btn-secondary'}`}
-                            onClick={() => setActiveTab('dashboard')} style={{ fontSize: '0.8rem', padding: '0.5rem 1rem' }}>
-                            <TrendingUp size={16} style={{ marginRight: '0.4rem' }} /> Sales
-                        </button>
-                        <button className={`btn ${activeTab === 'products' ? 'btn-primary' : 'btn-secondary'}`}
-                            onClick={() => setActiveTab('products')} style={{ fontSize: '0.8rem', padding: '0.5rem 1rem' }}>
-                            <Package size={16} style={{ marginRight: '0.4rem' }} /> Products
-                        </button>
-                    </div>
+        <div className="container" style={{ padding: '2rem 1rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: 0 }}>
+                    <BarChart3 className="text-primary" /> Vendor Dashboard
+                </h2>
+                
+                <div style={{ display: 'flex', gap: '0.5rem', background: 'var(--surface)', padding: '0.5rem', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                    <button 
+                        onClick={() => setActiveTab('dashboard')} 
+                        style={{ 
+                            padding: '0.5rem 1.5rem', 
+                            background: activeTab === 'dashboard' ? 'var(--primary)' : 'transparent',
+                            color: activeTab === 'dashboard' ? '#fff' : 'var(--text)',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontWeight: 500,
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        Overview
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('products')} 
+                        style={{ 
+                            padding: '0.5rem 1.5rem', 
+                            background: activeTab === 'products' ? 'var(--primary)' : 'transparent',
+                            color: activeTab === 'products' ? '#fff' : 'var(--text)',
+                            border: 'none',
+                            borderRadius: '8px',
+                            cursor: 'pointer',
+                            fontWeight: 500,
+                            transition: 'all 0.2s'
+                        }}
+                    >
+                        Inventory
+                    </button>
                 </div>
-
-                {/* ===== SALES DASHBOARD TAB ===== */}
-                {activeTab === 'dashboard' && (
-                    <div>
-                        {loadingSales ? (
-                            <div className="flex-center" style={{ padding: '4rem', flexDirection: 'column' }}>
-                                <div style={{ width: '40px', height: '40px', border: '2px solid var(--border)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                                <p style={{ color: 'var(--text-muted)', marginTop: '1rem' }}>Loading sales data...</p>
-                            </div>
-                        ) : salesData ? (
-                            <>
-                                {/* Stat cards */}
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-                                    <StatCard icon={<DollarSign size={22} />} label="Total Revenue" value={`₹${salesData.totalRevenue}`} color="#22c55e" />
-                                    <StatCard icon={<ShoppingBag size={22} />} label="Items Sold" value={salesData.totalItemsSold} color="#3b82f6" />
-                                    <StatCard icon={<Package size={22} />} label="Products" value={salesData.totalProducts} color="#f59e0b" />
-                                    <StatCard icon={<TrendingUp size={22} />} label="Total Orders" value={salesData.totalOrders} color="#8b5cf6" />
-                                </div>
-
-                                {/* Charts */}
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-                                    <div className="glass-panel" style={{ padding: '1.5rem' }}>
-                                        <BarChart data={salesData.salesByProduct} title="Sales by Product" />
-                                    </div>
-                                    <div className="glass-panel" style={{ padding: '1.5rem' }}>
-                                        <RevenueChart data={salesData.salesByDate} />
-                                    </div>
-                                </div>
-
-                                {/* Recent orders table */}
-                                <div className="glass-panel" style={{ padding: '1.5rem' }}>
-                                    <h3 style={{ fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', marginBottom: '1rem' }}>
-                                        Recent Orders
-                                    </h3>
-                                    {salesData.recentOrders.length > 0 ? (
-                                        <div style={{ overflowX: 'auto' }}>
-                                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                                                <thead>
-                                                    <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                                                        <th style={{ textAlign: 'left', padding: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>Customer</th>
-                                                        <th style={{ textAlign: 'left', padding: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>Product</th>
-                                                        <th style={{ textAlign: 'center', padding: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>Qty</th>
-                                                        <th style={{ textAlign: 'right', padding: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>Revenue</th>
-                                                        <th style={{ textAlign: 'center', padding: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>Status</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {salesData.recentOrders.map((order, idx) => (
-                                                        <tr key={idx} style={{ borderBottom: '1px solid var(--border)' }}>
-                                                            <td style={{ padding: '0.75rem' }}>{order.customerName}</td>
-                                                            <td style={{ padding: '0.75rem' }}>{order.productName}</td>
-                                                            <td style={{ padding: '0.75rem', textAlign: 'center' }}>{order.qty}</td>
-                                                            <td style={{ padding: '0.75rem', textAlign: 'right', color: 'var(--primary)', fontWeight: '600' }}>₹{order.revenue}</td>
-                                                            <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                                                                <span style={{
-                                                                    padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem', textTransform: 'uppercase',
-                                                                    background: order.status === 'delivered' ? 'rgba(34,197,94,0.15)' : 'rgba(212,181,126,0.15)',
-                                                                    color: order.status === 'delivered' ? 'var(--success)' : 'var(--primary)'
-                                                                }}>{order.status.replace('_', ' ')}</span>
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    ) : (
-                                        <p style={{ color: 'var(--text-muted)' }}>No orders yet. Sales will appear here.</p>
-                                    )}
-                                </div>
-                            </>
-                        ) : <p>Failed to load sales data</p>}
-                    </div>
-                )}
-
-                {/* ===== PRODUCTS TAB ===== */}
-                {activeTab === 'products' && (
-                    <div>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
-                            <button className="btn btn-primary" onClick={() => {
-                                setShowForm(!showForm); setEditingId(null);
-                                setFormData({ name: '', price: '', category: '', description: '', stock: '', image: '' });
-                            }}>
-                                {showForm ? <X /> : <Plus />} {showForm ? 'Close' : 'Add Product'}
-                            </button>
-                        </div>
-
-                        {showForm && (
-                            <form onSubmit={handleSubmit} className="glass-panel" style={{ padding: '2rem', marginBottom: '2rem' }}>
-                                <h3 style={{ marginBottom: '1.5rem', color: 'var(--primary)', textTransform: 'uppercase' }}>
-                                    {editingId ? 'Edit Product' : 'Add New Product'}
-                                </h3>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
-                                    <input name="name" placeholder="Product Name" value={formData.name} onChange={handleChange} required
-                                        style={{ padding: '0.8rem', background: 'var(--input-bg)', border: '1px solid var(--border)', color: 'var(--text)', borderRadius: '4px' }} />
-                                    <input name="price" type="number" placeholder="Price (₹)" value={formData.price} onChange={handleChange} required
-                                        style={{ padding: '0.8rem', background: 'var(--input-bg)', border: '1px solid var(--border)', color: 'var(--text)', borderRadius: '4px' }} />
-                                    <input name="category" placeholder="Category" value={formData.category} onChange={handleChange} required
-                                        style={{ padding: '0.8rem', background: 'var(--input-bg)', border: '1px solid var(--border)', color: 'var(--text)', borderRadius: '4px' }} />
-                                    <input name="stock" type="number" placeholder="Stock Qty" value={formData.stock} onChange={handleChange} required
-                                        style={{ padding: '0.8rem', background: 'var(--input-bg)', border: '1px solid var(--border)', color: 'var(--text)', borderRadius: '4px' }} />
-                                    <input name="image" placeholder="Image URL" value={formData.image} onChange={handleChange}
-                                        style={{ padding: '0.8rem', background: 'var(--input-bg)', border: '1px solid var(--border)', color: 'var(--text)', borderRadius: '4px' }} />
-                                    <textarea name="description" placeholder="Description" value={formData.description} onChange={handleChange} required
-                                        style={{ gridColumn: '1 / -1', padding: '0.8rem', background: 'var(--input-bg)', border: '1px solid var(--border)', color: 'var(--text)', borderRadius: '4px', minHeight: '100px', resize: 'vertical' }} />
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '1.5rem' }}>
-                                    <button type="button" className="btn btn-secondary" onClick={() => setShowForm(false)}>Cancel</button>
-                                    <button type="submit" className="btn btn-primary">Save Product</button>
-                                </div>
-                            </form>
-                        )}
-
-                        {products.map(product => (
-                            <div key={product._id} className="glass-panel" style={{
-                                padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem'
-                            }}>
-                                <div style={{ height: '150px', background: '#334155', borderRadius: '0.5rem', overflow: 'hidden' }}>
-                                    {product.image ? <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        : <div className="flex-center" style={{ height: '100%', color: 'var(--text-muted)' }}>No Image</div>}
-                                </div>
-                                <h3 style={{ margin: '0.5rem 0 0' }}>{product.name}</h3>
-                                <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', flex: 1 }}>{product.description}</p>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto' }}>
-                                    <div>
-                                        <span style={{ fontWeight: 'bold', fontSize: '1.1rem' }}>₹{product.price}</span>
-                                        <span style={{
-                                            marginLeft: '0.75rem', fontSize: '0.8rem',
-                                            color: product.stock > 0 ? 'var(--success)' : '#ef4444',
-                                            fontWeight: '600'
-                                        }}>
-                                            Stock: {product.stock}
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <button className="btn btn-secondary" onClick={() => handleEdit(product)} style={{ padding: '0.4rem', marginRight: '0.5rem' }}><Edit size={16} /></button>
-                                        <button className="btn btn-secondary" onClick={() => handleDelete(product._id)} style={{ padding: '0.4rem', color: 'var(--danger)' }}><Trash size={16} /></button>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                        {products.length === 0 && !showForm && <p>No products found. Add one!</p>}
-                    </div>
-                )}
             </div>
 
+            {/* ================= DASHBOARD ================= */}
+            {activeTab === 'dashboard' && (
+                <div className="page-transition" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    {loadingSales ? (
+                        <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>Loading analytics...</div>
+                    ) : (
+                        <>
+                            {/* STATS ROW */}
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem' }}>
+                                <StatCard icon={<DollarSign size={28} />} label="Total Revenue" value={`₹${salesData?.totalRevenue?.toLocaleString() || 0}`} />
+                                <StatCard icon={<ShoppingBag size={28} />} label="Items Sold" value={salesData?.totalItemsSold || 0} />
+                                <StatCard icon={<Package size={28} />} label="Active Products" value={salesData?.totalProducts || 0} />
+                                <StatCard icon={<TrendingUp size={28} />} label="Total Orders" value={salesData?.totalOrders || 0} />
+                            </div>
+
+                            {/* CHARTS ROW */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '1.5rem' }}>
+                                {/* LINE CHART */}
+                                <div className="glass-panel" style={{ padding: '1.5rem' }}>
+                                    <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--text-muted)' }}>Revenue Trend (7 Days)</h3>
+                                    <div style={{ height: '300px', width: '100%' }}>
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <AreaChart data={revenueChartData}>
+                                                <defs>
+                                                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3}/>
+                                                        <stop offset="95%" stopColor="var(--primary)" stopOpacity={0}/>
+                                                    </linearGradient>
+                                                </defs>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                                                <XAxis dataKey="name" stroke="var(--text-muted)" tick={{fill: 'var(--text-muted)'}} />
+                                                <YAxis stroke="var(--text-muted)" tick={{fill: 'var(--text-muted)'}} tickFormatter={(value) => `₹${value}`} />
+                                                <RechartsTooltip 
+                                                    contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text)' }}
+                                                    itemStyle={{ color: 'var(--primary)' }}
+                                                />
+                                                <Area type="monotone" dataKey="revenue" stroke="var(--primary)" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+
+                                {/* BAR CHART */}
+                                <div className="glass-panel" style={{ padding: '1.5rem' }}>
+                                    <h3 style={{ marginBottom: '1.5rem', fontSize: '1.1rem', color: 'var(--text-muted)' }}>Top Selling Products</h3>
+                                    <div style={{ height: '300px', width: '100%' }}>
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={productSalesData}>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                                                <XAxis dataKey="name" stroke="var(--text-muted)" tick={{fill: 'var(--text-muted)'}} />
+                                                <YAxis stroke="var(--text-muted)" tick={{fill: 'var(--text-muted)'}} />
+                                                <RechartsTooltip 
+                                                    cursor={{fill: 'rgba(255,255,255,0.05)'}}
+                                                    contentStyle={{ backgroundColor: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', color: 'var(--text)' }}
+                                                />
+                                                <Bar dataKey="sales" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </div>
+            )}
+
+            {/* ================= PRODUCTS INVENTORY ================= */}
+            {activeTab === 'products' && (
+                <div className="page-transition glass-panel" style={{ padding: '2rem', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                        <div>
+                            <h3 style={{ margin: 0, fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <List className="text-primary" size={20} /> Product Inventory
+                            </h3>
+                            <p style={{ color: 'var(--text-muted)', margin: '0.5rem 0 0 0', fontSize: '0.9rem' }}>Manage your products and stock levels</p>
+                        </div>
+                        <button onClick={() => { setShowForm(true); setEditingId(null); setFormData({name:'', price:'', category:'', description:'', stock:'', image:''}) }} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <Plus size={18} /> Add Product
+                        </button>
+                    </div>
+
+                    <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                            <thead>
+                                <tr style={{ borderBottom: '1px solid var(--border)', color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase' }}>
+                                    <th style={{ padding: '1rem', fontWeight: 600 }}>Product</th>
+                                    <th style={{ padding: '1rem', fontWeight: 600 }}>Category</th>
+                                    <th style={{ padding: '1rem', fontWeight: 600 }}>Stock</th>
+                                    <th style={{ padding: '1rem', fontWeight: 600 }}>Price</th>
+                                    <th style={{ padding: '1rem', fontWeight: 600, textAlign: 'right' }}>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {products.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-muted)' }}>
+                                            No products found. Add your first product!
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    products.map(product => (
+                                        <tr key={product._id} style={{ 
+                                            borderBottom: '1px solid var(--border)',
+                                            transition: 'background 0.2s',
+                                            opacity: loadingAction === product._id ? 0.5 : 1
+                                        }} className="dashboard-table-row">
+                                            <td style={{ padding: '1rem' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                                    <div style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'var(--background)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border)' }}>
+                                                        {product.image ? (
+                                                            <img src={product.image} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                        ) : (
+                                                            <Package size={20} className="text-muted" />
+                                                        )}
+                                                    </div>
+                                                    <span style={{ fontWeight: 500 }}>{product.name}</span>
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '1rem', color: 'var(--text-muted)' }}>{product.category || '-'}</td>
+                                            <td style={{ padding: '1rem' }}>
+                                                <span style={{ 
+                                                    padding: '0.25rem 0.75rem', 
+                                                    borderRadius: '20px', 
+                                                    fontSize: '0.85rem',
+                                                    background: product.stock > 10 ? 'rgba(50, 205, 50, 0.1)' : 'rgba(248, 81, 73, 0.1)',
+                                                    color: product.stock > 10 ? 'var(--success)' : 'var(--danger)'
+                                                }}>
+                                                    {product.stock || 0} in stock
+                                                </span>
+                                            </td>
+                                            <td style={{ padding: '1rem', fontWeight: 500 }}>₹{product.price}</td>
+                                            <td style={{ padding: '1rem', textAlign: 'right' }}>
+                                                <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                                    <button 
+                                                        onClick={() => handleEdit(product)}
+                                                        className="btn"
+                                                        style={{ padding: '0.5rem', background: 'var(--surface)', border: '1px solid var(--border)' }}
+                                                        title="Edit"
+                                                    >
+                                                        <Edit size={16} />
+                                                    </button>
+                                                    <button 
+                                                        onClick={() => handleDelete(product._id)}
+                                                        disabled={loadingAction === product._id}
+                                                        className="btn"
+                                                        style={{ padding: '0.5rem', background: 'rgba(248, 81, 73, 0.1)', color: 'var(--danger)', border: '1px solid transparent' }}
+                                                        title="Delete"
+                                                    >
+                                                        <Trash size={16} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
+            {/* ================= MODAL: ADD / EDIT PRODUCT ================= */}
+            {showForm && (
+                <div style={{ 
+                    position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, 
+                    background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 
+                }}>
+                    <div className="glass-panel page-transition" style={{ 
+                        width: '100%', maxWidth: '500px', padding: '2rem', 
+                        position: 'relative', background: 'var(--surface)',
+                        maxHeight: '90vh', overflowY: 'auto'
+                    }}>
+                        <button 
+                            onClick={() => setShowForm(false)} 
+                            style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', background: 'transparent', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+                        >
+                            <X size={24} />
+                        </button>
+
+                        <h3 style={{ marginTop: 0, marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            {editingId ? <Edit size={20} className="text-primary"/> : <Plus size={20} className="text-primary"/>} 
+                            {editingId ? 'Edit Product' : 'Add New Product'}
+                        </h3>
+
+                        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                            
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>Product Name *</label>
+                                <input 
+                                    name="name" value={formData.name} onChange={handleChange} required 
+                                    style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--input-bg)', color: 'var(--text)' }}
+                                />
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>Price (₹) *</label>
+                                    <input 
+                                        name="price" type="number" value={formData.price} onChange={handleChange} required 
+                                        style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--input-bg)', color: 'var(--text)' }}
+                                    />
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>Stock Quantity *</label>
+                                    <input 
+                                        name="stock" type="number" value={formData.stock} onChange={handleChange} required 
+                                        style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--input-bg)', color: 'var(--text)' }}
+                                    />
+                                </div>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>Category</label>
+                                <input 
+                                    name="category" value={formData.category} onChange={handleChange} 
+                                    placeholder="e.g. Electronics, Clothing"
+                                    style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--input-bg)', color: 'var(--text)' }}
+                                />
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>Image URL</label>
+                                <input 
+                                    name="image" value={formData.image} onChange={handleChange} 
+                                    placeholder="https://..."
+                                    style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--input-bg)', color: 'var(--text)' }}
+                                />
+                                {formData.image && (
+                                    <div style={{ marginTop: '0.5rem', borderRadius: '8px', overflow: 'hidden', height: '100px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--background)' }}>
+                                        <img src={formData.image} alt="Preview" style={{ height: '100%', objectFit: 'contain' }} onError={(e) => { e.target.style.display='none'; e.target.parentNode.innerHTML='<span style="color:var(--text-muted);font-size:0.8rem">Invalid Image URL</span>'; }} />
+                                    </div>
+                                )}
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                <label style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>Description</label>
+                                <textarea 
+                                    name="description" value={formData.description} onChange={handleChange} rows={3}
+                                    style={{ padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--input-bg)', color: 'var(--text)', resize: 'vertical' }}
+                                />
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                                <button type="button" onClick={() => setShowForm(false)} className="btn btn-secondary" style={{ flex: 1 }}>
+                                    Cancel
+                                </button>
+                                <button type="submit" className="btn btn-primary" disabled={loadingAction === 'form'} style={{ flex: 2, display: 'flex', justifyContent: 'center' }}>
+                                    {loadingAction === 'form' ? 'Saving...' : (editingId ? 'Update Product' : 'Save Product')}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+            
+            {/* Some minimal inline CSS for the table hover effect */}
             <style>{`
-                @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+                .dashboard-table-row:hover {
+                    background-color: var(--surface);
+                }
             `}</style>
         </div>
     );

@@ -1,39 +1,67 @@
 // ========================================================================
-// MODULE 3: Kafka Consumer — Delivery Service
+// Kafka Consumer — Delivery Service [CONCURRENCY-SAFE]
 // ========================================================================
-// Topics: Microservices decoupling, Background workers
+// Listens to: payment_completed
+// Emits on success: order_status_update (status: confirmed)
+//                   delivery_assigned
 //
-// This consumer listens to the 'orders' topic.
-// After order is placed, it simulates finding a delivery agent
-// and updates the order status to "confirmed" to begin the tracking flow.
+// Protections:
+//   1. Persistent idempotency — ProcessedEvent collection (not in-memory)
+//   2. Retry-safe             — errors are re-thrown for Kafka DLQ
+//
+// Key design: trusts the event chain — if payment_completed arrived, both
+// inventory and payment already succeeded. No need to re-check order state.
+// Does NOT write directly to Order collection.
 // ========================================================================
 
-const Order = require('../../models/Order');
+const { produceEvent, TOPICS } = require('../../config/kafka');
+const ProcessedEvent = require('../../models/ProcessedEvent');
 
-const deliveryHandler = async ({ message }) => {
+const CONSUMER_NAME = 'delivery';
+
+const deliveryHandler = async ({ parsedValue }) => {
+    const { eventId, orderId, userId, items } = parsedValue;
+
+    // ── Validate input ──────────────────────────────────────────────────
+    if (!eventId || !orderId) {
+        console.log('[Delivery] ❌ Invalid event received:', parsedValue);
+        return;
+    }
+
+    // ── Persistent idempotency check ────────────────────────────────────
+    // Try to insert a record for this (eventId, consumer) pair.
+    // If it already exists, the unique index throws a duplicate-key error.
     try {
-        const eventData = JSON.parse(message.value.toString());
-        const { orderId } = eventData;
-        
-        console.log(`[Delivery Consumer] Trying to allocate agent for order ${orderId}...`);
-
-        // Simulate finding an available agent Delay (2 seconds)
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        // Update status to 'confirmed' (Agent found, restaurant preparing)
-        // Wait, check if order was cancelled by Inventory Consumer first!
-        const existingOrder = await Order.findById(orderId);
-        if (existingOrder && existingOrder.status === 'cancelled') {
-            console.log(`[Delivery Consumer] ⚠️ Order ${orderId} was cancelled. Halting allocation.`);
+        await ProcessedEvent.create({ eventId, consumer: CONSUMER_NAME });
+    } catch (err) {
+        if (err.code === 11000) {
+            // Duplicate key — this event was already processed
+            console.log(`[Delivery] ⏭  Duplicate event ${eventId} — skipping`);
             return;
         }
-
-        await Order.findByIdAndUpdate(orderId, { status: 'confirmed' });
-        
-        console.log(`[Delivery Consumer] ✅ Agent allocated! Order ${orderId} status set to confirmed.`);
-    } catch (error) {
-        console.error('[Delivery Consumer] Error:', error.message);
+        // Unexpected DB error — re-throw so Kafka retries
+        throw err;
     }
+
+    console.log(`[Delivery] Allocating agent for order ${orderId}`);
+
+    // Simulate finding an available delivery agent
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Emit: order confirmed + delivery info
+    await produceEvent(TOPICS.ORDER_STATUS_UPDATE, {
+        orderId,
+        status: 'confirmed',
+    });
+
+    await produceEvent(TOPICS.DELIVERY_ASSIGNED, {
+        orderId,
+        userId,
+        items,
+        assignedAt: new Date().toISOString(),
+    });
+
+    console.log(`[Delivery] ✅ Agent allocated for order ${orderId} — status: confirmed`);
 };
 
 module.exports = deliveryHandler;

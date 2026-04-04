@@ -17,18 +17,38 @@ const MyOrders = () => {
     const [selectedOrder, setSelectedOrder] = useState(null); // For tracking view
 
     useEffect(() => {
+        let isMounted = true;
+
         const fetchOrders = async () => {
             try {
                 const config = { headers: { Authorization: `Bearer ${user.token}` } };
                 const { data } = await axios.get(`${import.meta.env.VITE_API_URL}/orders/myorders`, config);
+
                 data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-                setOrders(data);
+
+                if (isMounted) {
+                    setOrders(data);
+
+                    // 🔥 also update selected order in real-time
+                    if (selectedOrder) {
+                        const updated = data.find(o => o._id === selectedOrder._id);
+                        if (updated) setSelectedOrder(updated);
+                    }
+                }
             } catch (error) {
                 console.error(error);
             }
         };
-        fetchOrders();
-    }, [user]);
+
+        fetchOrders(); // initial load
+
+        const interval = setInterval(fetchOrders, 3000); // 🔥 poll every 3 sec
+
+        return () => {
+            isMounted = false;
+            clearInterval(interval);
+        };
+    }, [user, selectedOrder]);
 
     // Tracking steps with icons
     const trackingSteps = [

@@ -8,6 +8,7 @@
 // ========================================================================
 
 import { Link } from 'react-router-dom';
+import logo from '../assets/logo.png';
 
 const LandingPage = () => {
     return (
@@ -30,7 +31,10 @@ const LandingPage = () => {
                 zIndex: 10,
                 background: 'transparent'
             }}>
-                <div style={{ fontWeight: '900', fontSize: '1.5rem', letterSpacing: '-0.05em', color: 'var(--text)' }}>MINIT</div>
+                <div style={{ fontWeight: '900', fontSize: '1.5rem', letterSpacing: '-0.05em', color: 'var(--text)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <img src={logo} alt="MINIT Logo" style={{ height: '64px', width: '64px', borderRadius: '50%', objectFit: 'contain' }} />
+                    MINIT
+                </div>
                 <div style={{ display: 'flex', gap: '2rem', alignItems: 'center' }}>
                 </div>
             </nav>
@@ -68,6 +72,7 @@ const LandingPage = () => {
                 {/* ===== HTML5 HEADING: <h1> ===== */}
                 {/* TEXT SHADOW — adds glow effect behind text */}
                 {/* textShadow: 'x-offset y-offset blur-radius color' */}
+                <img src={logo} alt="MINIT Logo" style={{ height: '240px', width: '240px', borderRadius: '50%', objectFit: 'contain', marginBottom: '1.5rem', zIndex: 2, position: 'relative', boxShadow: '0 8px 32px rgba(50, 205, 50, 0.2)' }} />
                 <h1 style={{
                     fontSize: 'clamp(5rem, 15vw, 12rem)',  // Responsive font size using clamp()
                     lineHeight: '0.8',

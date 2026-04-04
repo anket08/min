@@ -69,7 +69,7 @@ const Cart = () => {
         <div className="container" style={{ paddingTop: '80px' }}>
             {/* Background decorations removed */}
             <div className="glass-panel" style={{ padding: '2rem', maxWidth: '900px', margin: '0 auto', border: '1px solid var(--border)' }}>
-                <h2 style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)' }}>
+                <h2 style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary)', backgroundColor:'rgba(255, 255, 255, 0.96)' }}>
                     <ShoppingBag size={28} /> Shopping Cart
                 </h2>
 
@@ -91,12 +91,12 @@ const Cart = () => {
                                 <div key={item.product} className="glass-panel" style={{
                                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                                     padding: '1.5rem', marginBottom: '1rem',
-                                    border: '1px solid var(--border)', background: 'rgba(20, 15, 11, 0.4)'
+                                    border: '1px solid var(--border)', background: 'rgba(188, 250, 154, 0.94)'
                                 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flex: 1 }}>
                                         <div style={{
                                             width: '80px', height: '80px', background: '#1a1614',
-                                            borderRadius: '0.5rem', overflow: 'hidden', border: '1px solid var(--border)'
+                                            borderRadius: '0.5rem', overflow: 'hidden', border: '1px solid var(--border)', color:'white',
                                         }}>
                                             {item.image && <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
                                         </div>
@@ -106,7 +106,7 @@ const Cart = () => {
                                         </div>
                                     </div>
 
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', color:'white' }}>
                                         {/* Quantity controls — EVENT HANDLING with onClick */}
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--surface)', borderRadius: '0.5rem', padding: '0.25rem', border: '1px solid var(--border)' }}>
                                             <button className="btn btn-secondary" onClick={() => updateQuantity(item.product, -1)} style={{ padding: '0.5rem', minWidth: 'auto', color: 'var(--text)' }}>

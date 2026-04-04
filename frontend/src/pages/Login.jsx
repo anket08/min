@@ -9,6 +9,7 @@
 import { useState, useContext } from 'react';             // React Hooks
 import { useNavigate, Link } from 'react-router-dom';    // React Router
 import AuthContext from '../context/AuthContext';
+import logo from '../assets/logo.png';
 
 const Login = () => {
     // --- STATE: Each form field has its own state ---
@@ -48,7 +49,7 @@ const Login = () => {
         }} className="login-container">
             {/* Background decorations removed */}
 
-            <div className="glass-panel" style={{
+             <div className="glass-panel" style={{
                 padding: '3rem',
                 width: '100%',
                 maxWidth: '400px',

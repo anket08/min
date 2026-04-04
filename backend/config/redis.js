@@ -1,62 +1,47 @@
 // ========================================================================
-// MODULE 3: Redis Cache — In-memory data store for frequently accessed data
+// Redis Config — Cache helper (no in-memory fallback)
 // ========================================================================
-// Topics: Caching, Redis key-value store, Async/Await, Error handling
-//
-// Redis stores data in RAM = extremely fast reads/writes
-// Used here to cache product stock counts so we don't hit MongoDB every time
-// Falls back to an in-memory Map if Redis server isn't running
+// Falls back gracefully on individual operation errors by throwing, so
+// callers know the operation truly failed rather than silently reading
+// stale data from a local Map.
 // ========================================================================
 
 const { createClient } = require('redis');
 
 let client = null;
-let useMemoryFallback = false;
-const memoryStore = new Map(); // In-memory fallback (JavaScript Map)
 
-// --- CONNECT TO REDIS ---
+// ── Connect ──────────────────────────────────────────────────────────────
 const connectRedis = async () => {
     try {
         client = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6379' });
-        client.on('error', (err) => {
-            console.log('Redis error, using in-memory fallback:', err.message);
-            useMemoryFallback = true;
-        });
+        client.on('error', (err) => console.error('[Redis] Client error:', err.message));
         await client.connect();
         console.log('✅ Redis connected');
     } catch (error) {
-        console.log('⚠️  Redis not available, using in-memory cache fallback');
-        useMemoryFallback = true;
+        console.error('❌ Redis failed to connect:', error.message);
+        client = null; // ensure we don't try to use a broken client
     }
 };
 
-// --- GET value from cache ---
+// ── Readiness check ──────────────────────────────────────────────────────
+const isReady = () => client !== null && client.isReady;
+
+// ── GET ──────────────────────────────────────────────────────────────────
 const getCache = async (key) => {
-    if (useMemoryFallback) return memoryStore.get(key) || null;
-    try {
-        return await client.get(key);
-    } catch {
-        return memoryStore.get(key) || null;
-    }
+    if (!isReady()) return null;
+    return await client.get(key);
 };
 
-// --- SET value in cache (with optional TTL in seconds) ---
+// ── SET (with optional TTL in seconds) ──────────────────────────────────
 const setCache = async (key, value, ttlSeconds = 300) => {
-    if (useMemoryFallback) {
-        memoryStore.set(key, String(value));
-        return;
-    }
-    try {
-        await client.set(key, String(value), { EX: ttlSeconds });
-    } catch {
-        memoryStore.set(key, String(value));
-    }
+    if (!isReady()) throw new Error('[Redis] Client not ready — cannot set cache');
+    await client.set(key, String(value), { EX: ttlSeconds });
 };
 
-// --- DELETE value from cache ---
+// ── DELETE ───────────────────────────────────────────────────────────────
 const delCache = async (key) => {
-    if (useMemoryFallback) { memoryStore.delete(key); return; }
-    try { await client.del(key); } catch { memoryStore.delete(key); }
+    if (!isReady()) return; // best-effort delete; not fatal
+    await client.del(key);
 };
 
-module.exports = { connectRedis, getCache, setCache, delCache };
+module.exports = { connectRedis, isReady, getCache, setCache, delCache };

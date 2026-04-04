@@ -10,6 +10,7 @@ import { useState, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import AuthContext from '../context/AuthContext';
 import { UserPlus, Loader } from 'lucide-react';
+import logo from '../assets/logo.png';
 
 const Register = () => {
     // --- STATE for each form field (Controlled Components) ---
@@ -48,7 +49,7 @@ const Register = () => {
         }} className="login-container">
             {/* Background decorations removed */}
 
-            <div className="glass-panel" style={{
+             <div className="glass-panel" style={{
                 padding: '3rem',
                 width: '100%',
                 maxWidth: '500px',

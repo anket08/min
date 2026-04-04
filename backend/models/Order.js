@@ -44,6 +44,21 @@ const orderSchema = mongoose.Schema({
         default: 'pending',
         enum: ['pending', 'confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled']
     },
+
+    // ── Optimistic locking ──────────────────────────────────────────────
+    // Incremented on every state-changing update. Consumers include the
+    // current version in their query filter so that only ONE concurrent
+    // writer succeeds; losers retry with the fresh version.
+    version: { type: Number, default: 0 },
+
+    // ── Persistent idempotency ──────────────────────────────────────────
+    // Stores eventIds that have already been applied to this order.
+    // The orderConsumer checks this array with $nin before updating.
+    processedEvents: [{ type: String }],
+
 }, { timestamps: true });
+
+// Index for fast idempotency lookups
+orderSchema.index({ processedEvents: 1 });
 
 module.exports = mongoose.model('Order', orderSchema);

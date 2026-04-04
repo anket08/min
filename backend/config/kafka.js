@@ -1,101 +1,156 @@
 // ========================================================================
-// MODULE 3: Kafka Event-Driven Architecture — Config & Client
+// Kafka Config — Multi-topic, Retry, Dead Letter Queue
 // ========================================================================
-// Topics: Message Brokers, Pub/Sub, Decoupling Microservices, High Throughput
-//
-// Apache Kafka is used to decouple the Order process.
-// Fallback: If Kafka is not running, we use Node's native EventEmitter
-// to simulate the Pub/Sub architecture so the app still works!
+// Uses KafkaJS. Consumers support:
+//   - Idempotent event envelopes (eventId + timestamp on every message)
+//   - Per-consumer retry (maxRetries, default 3)
+//   - Dead Letter Queue routing after exhausted retries
+// The EventEmitter fallback has been intentionally removed — if Kafka is
+// unavailable, consumers log a clear error rather than silently using an
+// in-process emitter that cannot scale across multiple processes.
 // ========================================================================
 
 const { Kafka } = require('kafkajs');
-const EventEmitter = require('events');
+const { randomUUID } = require('crypto');
 
-// Native EventEmitter for fallback (simulates Kafka in same-process)
-class KafkaFallback extends EventEmitter {}
-const eventEmitter = new KafkaFallback();
-
+// ── Kafka client (created once on connect) ──────────────────────────────
 let kafka = null;
 let producer = null;
-let useFallback = false;
 
-// --- INITIALIZATION ---
+// ── Topic constants ─────────────────────────────────────────────────────
+const TOPICS = {
+    ORDER_CREATED:        'order_created',
+    INVENTORY_CHECKED:    'inventory_checked',
+    INVENTORY_FAILED:     'inventory_failed',
+    PAYMENT_COMPLETED:    'payment_completed',
+    PAYMENT_FAILED:       'payment_failed',
+    ORDER_STATUS_UPDATE:  'order_status_update',
+    DELIVERY_ASSIGNED:    'delivery_assigned',
+    DLQ:                  'dlq',
+};
+
+// ── Initialize Kafka producer ────────────────────────────────────────────
 const connectKafka = async () => {
-    try {
-        console.log('🔄 Attempting to connect to Kafka broker...');
-        kafka = new Kafka({
-            clientId: 'minit-backend',
-            brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
-            retry: { initialRetryTime: 100, retries: 2 } // Fail fast if broker is down
-        });
+    kafka = new Kafka({
+        clientId: 'minit-backend',
+        brokers: [process.env.KAFKA_BROKER || 'localhost:9092'],
+        retry: { initialRetryTime: 300, retries: 5 },
+    });
 
-        producer = kafka.producer();
+    producer = kafka.producer();
+    try {
         await producer.connect();
-        console.log('✅ Connected to Kafka broker successfully!');
-    } catch (error) {
-        console.log('⚠️  Kafka broker not found. Using local EventEmitter fallback.');
-        useFallback = true;
+        console.log('✅ Kafka producer connected');
+    } catch (err) {
+        console.error('❌ Kafka producer failed to connect:', err.message);
+        // Producer failing is non-fatal at startup — it will error per-call
     }
 };
 
-// --- PRODUCER LOGIC (Publishing Events) ---
-// Used by orderController.js to send new orders to the pipeline
-const produceEvent = async (topic, messages) => {
-    // Expected messages format: [{ value: JSON.stringify(data) }]
-    if (useFallback) {
-        // Fallback: Emit event synchronously to our local listeners
-        messages.forEach(msg => {
-            console.log(`[Producer Fallback] Emitting event to topic: ${topic}`);
-            eventEmitter.emit(topic, JSON.parse(msg.value));
-        });
-        return;
-    }
+// ── Produce a single event ───────────────────────────────────────────────
+// Wraps payload in a standard envelope: { eventId, topic, timestamp, ...payload }
+// eventId is a UUID used by consumers for idempotency checks.
+//
+// KEY DESIGN: When the payload contains an `orderId`, it is used as the
+// Kafka message key. This guarantees that all events for the same order
+// land on the SAME partition, giving sequential processing per order.
+const produceEvent = async (topic, payload) => {
+    if (!producer) throw new Error('Kafka producer not initialised. Call connectKafka() first.');
 
-    try {
-        await producer.send({
-            topic,
-            messages
-        });
-        console.log(`[Producer] Message sent to topic: ${topic}`);
-    } catch (error) {
-        console.error(`[Producer Error] Failed to send message to ${topic}:`, error);
-        // Fall back to event emitter if Kafka suddenly dies
-        messages.forEach(msg => eventEmitter.emit(topic, JSON.parse(msg.value)));
-    }
+    const envelope = {
+        eventId: randomUUID(),
+        topic,
+        timestamp: new Date().toISOString(),
+        ...payload,
+    };
+
+    await producer.send({
+        topic,
+        messages: [{
+            // ── Partition key: orderId ensures same-order = same-partition ──
+            key: payload.orderId ? String(payload.orderId) : null,
+            value: JSON.stringify(envelope),
+        }],
+    });
+
+    console.log(`[Producer] → ${topic} | eventId: ${envelope.eventId} | key: ${payload.orderId || 'none'}`);
+    return envelope.eventId;
 };
 
-// --- CONSUMER LOGIC (Subscribing to Events) ---
-// Used by our inventory, payment, and delivery worker files
-const consumeEvent = async (topic, groupId, messageHandler) => {
-    if (useFallback) {
-        // Fallback: Listen to the local event emitter
-        console.log(`[Consumer Fallback] ${groupId} listening to topic: ${topic}`);
-        eventEmitter.on(topic, async (data) => {
-            // Simulate Kafka payload structure so consumer code doesn't change
-            await messageHandler({ message: { value: JSON.stringify(data) } });
-        });
-        return;
-    }
+// ── Consume a topic with retry + DLQ ────────────────────────────────────
+// handler: async ({ message, parsedValue }) => void
+// options.maxRetries: number of attempts before routing to DLQ (default 3)
+const consumeEvent = async (topic, groupId, handler, options = {}) => {
+    if (!kafka) throw new Error('Kafka not initialised. Call connectKafka() first.');
+
+    const { maxRetries = 3 } = options;
+    const consumer = kafka.consumer({ groupId });
 
     try {
-        const consumer = kafka.consumer({ groupId });
         await consumer.connect();
         await consumer.subscribe({ topic, fromBeginning: true });
 
-        console.log(`[Consumer] ${groupId} listening to topic: ${topic}`);
+        console.log(`[Consumer] ${groupId} → listening on topic: ${topic}`);
+
         await consumer.run({
-            eachMessage: async ({ topic, partition, message }) => {
-                await messageHandler({ message });
+            eachMessage: async ({ topic: t, partition, message }) => {
+                let parsed;
+                try {
+                    parsed = JSON.parse(message.value.toString());
+                } catch {
+                    console.error(`[Consumer ${groupId}] Failed to parse message — routing to DLQ`);
+                    await _sendToDLQ(topic, message.value.toString(), 'JSON parse error');
+                    return;
+                }
+
+                // Retry loop
+                let attempt = 0;
+                while (attempt < maxRetries) {
+                    try {
+                        await handler({ message, parsedValue: parsed });
+                        return; // success — stop retry loop
+                    } catch (err) {
+                        attempt++;
+                        console.error(
+                            `[Consumer ${groupId}] Error on attempt ${attempt}/${maxRetries}: ${err.message}`
+                        );
+                        if (attempt < maxRetries) {
+                            // Exponential backoff: 500ms, 1s, 2s, …
+                            await new Promise(r => setTimeout(r, 500 * Math.pow(2, attempt - 1)));
+                        }
+                    }
+                }
+
+                // Exhausted retries — send to DLQ
+                console.error(`[Consumer ${groupId}] Exhausted retries for eventId: ${parsed.eventId}. Sending to DLQ.`);
+                await _sendToDLQ(topic, JSON.stringify(parsed), `Failed after ${maxRetries} attempts`);
             },
         });
-    } catch (error) {
-        console.error(`[Consumer Error] ${groupId} failed to connect:`, error);
-        // Fall back to event emitter
-        console.log(`[Consumer Fallback] ${groupId} switching to local listener for: ${topic}`);
-        eventEmitter.on(topic, async (data) => {
-            await messageHandler({ message: { value: JSON.stringify(data) } });
-        });
+    } catch (err) {
+        console.error(`[Consumer ${groupId}] Failed to connect to Kafka: ${err.message}`);
+        // Do NOT fall back to an EventEmitter — surface the failure clearly.
     }
 };
 
-module.exports = { connectKafka, produceEvent, consumeEvent };
+// ── Internal: route a failed message to the dead-letter queue ───────────
+const _sendToDLQ = async (originalTopic, rawValue, reason) => {
+    if (!producer) return;
+    try {
+        await producer.send({
+            topic: TOPICS.DLQ,
+            messages: [{
+                value: JSON.stringify({
+                    originalTopic,
+                    reason,
+                    failedAt: new Date().toISOString(),
+                    payload: rawValue,
+                }),
+            }],
+        });
+        console.log(`[DLQ] Message from topic "${originalTopic}" routed to DLQ. Reason: ${reason}`);
+    } catch (err) {
+        console.error('[DLQ] Could not route to DLQ:', err.message);
+    }
+};
+
+module.exports = { connectKafka, produceEvent, consumeEvent, TOPICS };

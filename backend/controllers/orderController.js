@@ -6,7 +6,7 @@
 
 const Order = require('../models/Order');
 const Product = require('../models/Product'); // Needed for getVendorSales
-const { produceEvent } = require('../config/kafka'); 
+const { produceEvent, TOPICS } = require('../config/kafka');
 
 // ========================================================================
 // CREATE — Place an order (ASYNCHRONOUS EVENT-DRIVEN)
@@ -33,17 +33,13 @@ const addOrderItems = async (req, res) => {
 
         // STEP 2: Publish "OrderCreated" event to Kafka topic "orders"
         // This decouples the order ingestion from processing logic.
-        const eventPayload = {
+        await produceEvent(TOPICS.ORDER_CREATED, {
             orderId: createdOrder._id,
             userId: req.user._id,
             totalPrice,
             paymentMethod,
-            items: orderItems
-        };
-
-        await produceEvent('orders', [
-            { value: JSON.stringify(eventPayload) }
-        ]);
+            items: orderItems,
+        });
 
         // STEP 3: Return response to user IMMEDIATELY (High Throughput)
         res.status(201).json(createdOrder);
@@ -142,4 +138,9 @@ const getVendorSales = async (req, res) => {
     }
 };
 
-module.exports = { addOrderItems, getOrderById, getMyOrders, getOrders, updateOrderStatus, getVendorSales };
+module.exports = { addOrderItems,
+     getOrderById, 
+     getMyOrders, 
+     getOrders, 
+     updateOrderStatus, 
+     getVendorSales };
