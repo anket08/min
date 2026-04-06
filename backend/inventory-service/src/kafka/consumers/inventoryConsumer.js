@@ -24,7 +24,7 @@ const inventoryHandler = async ({ parsedValue }) => {
 
     // ── Validate input ──────────────────────────────────────────────────
     if (!eventId || !orderId) {
-        console.log('[Inventory] ❌ Invalid event received:', parsedValue);
+        console.log('[Inventory]   Invalid event received:', parsedValue);
         return;
     }
 
@@ -63,7 +63,7 @@ const inventoryHandler = async ({ parsedValue }) => {
 
         if (!updated) {
             // Stock insufficient or product not found — abort
-            console.log(`[Inventory] ❌ Insufficient stock for product ${item.product}`);
+            console.log(`[Inventory]   Insufficient stock for product ${item.product}`);
             allDecremented = false;
 
             // Invalidate cache so next read reflects real DB state
@@ -90,7 +90,7 @@ const inventoryHandler = async ({ parsedValue }) => {
             status: 'cancelled',
             reason: 'Insufficient stock',
         });
-        console.log(`[Inventory] ❌ Order ${orderId} cancelled — stock insufficient`);
+        console.log(`[Inventory]   Order ${orderId} cancelled — stock insufficient`);
         return;
     }
 
@@ -103,7 +103,7 @@ const inventoryHandler = async ({ parsedValue }) => {
         items,
     });
 
-    console.log(`[Inventory] ✅ Stock decremented for order ${orderId}`);
+    console.log(`[Inventory]   Stock decremented for order ${orderId}`);
 };
 
 module.exports = inventoryHandler;

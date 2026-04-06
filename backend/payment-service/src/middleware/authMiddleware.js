@@ -29,7 +29,7 @@ const protect = async (req, res, next) => {
             // Attach the user object to req (minus password) for use in route handlers
             req.user = await User.findById(decoded.id).select('-password');
 
-            next(); // ✅ token valid — continue to the route handler
+            next(); //   token valid — continue to the route handler
         } catch (error) {
             console.error(error);
             res.status(401).json({ message: 'Not authorized, token failed' });
@@ -50,7 +50,7 @@ const restrictTo = (...roles) => {
         if (!roles.includes(req.user.role)) {
             return res.status(403).json({ message: 'Not authorized to access this route' });
         }
-        next(); // ✅ user has the right role — continue
+        next(); //   user has the right role — continue
     };
 };
 

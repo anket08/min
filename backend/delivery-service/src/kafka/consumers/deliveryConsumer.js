@@ -24,7 +24,7 @@ const deliveryHandler = async ({ parsedValue }) => {
 
     // ── Validate input ──────────────────────────────────────────────────
     if (!eventId || !orderId) {
-        console.log('[Delivery] ❌ Invalid event received:', parsedValue);
+        console.log('[Delivery]   Invalid event received:', parsedValue);
         return;
     }
 
@@ -61,7 +61,7 @@ const deliveryHandler = async ({ parsedValue }) => {
         assignedAt: new Date().toISOString(),
     });
 
-    console.log(`[Delivery] ✅ Agent allocated for order ${orderId} — status: confirmed`);
+    console.log(`[Delivery]   Agent allocated for order ${orderId} — status: confirmed`);
 };
 
 module.exports = deliveryHandler;

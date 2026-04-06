@@ -40,9 +40,9 @@ const connectKafka = async () => {
     producer = kafka.producer();
     try {
         await producer.connect();
-        console.log('✅ Kafka producer connected');
+        console.log('  Kafka producer connected');
     } catch (err) {
-        console.error('❌ Kafka producer failed to connect:', err.message);
+        console.error('  Kafka producer failed to connect:', err.message);
         process.exit(1);
     }
 };

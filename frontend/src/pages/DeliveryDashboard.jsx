@@ -257,7 +257,7 @@ const DeliveryDashboard = () => {
                                         borderRadius: '8px',
                                         border: '1px solid rgba(50, 205, 50, 0.2)'
                                     }}>
-                                        ✅ Delivery Complete
+                                          Delivery Complete
                                     </div>
                                 )}
                             </div>

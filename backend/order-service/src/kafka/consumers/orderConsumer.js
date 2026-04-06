@@ -35,7 +35,7 @@ const orderStatusHandler = async ({ parsedValue }) => {
 
         // ── Validate input ──────────────────────────────────────────────
         if (!eventId || !orderId) {
-            console.log('[Order] ❌ Invalid event received:', parsedValue);
+            console.log('[Order]   Invalid event received:', parsedValue);
             return;
         }
 
@@ -103,7 +103,7 @@ const orderStatusHandler = async ({ parsedValue }) => {
             if (updatedOrder) {
                 // ── Success ─────────────────────────────────────────────
                 console.log(
-                    `[Order] ✅ Order ${orderId} updated (v${currentOrder.version}→v${updatedOrder.version}):`,
+                    `[Order]   Order ${orderId} updated (v${currentOrder.version}→v${updatedOrder.version}):`,
                     update,
                     reason ? `| reason: ${reason}` : ''
                 );
@@ -128,7 +128,7 @@ const orderStatusHandler = async ({ parsedValue }) => {
         );
 
     } catch (error) {
-        console.error('[Order] ❌ Error processing event:', error);
+        console.error('[Order]   Error processing event:', error);
         throw error; // re-throw so Kafka retry / DLQ picks it up
     }
 };

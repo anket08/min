@@ -64,7 +64,7 @@ const loginUser = async (req, res) => {
 
         // Check if user exists AND password matches (bcrypt compare)
         if (user && (await user.matchPassword(password))) {
-            // ✅ Success — send user data + JWT token
+            //   Success — send user data + JWT token
             res.json({
                 _id: user._id,
                 name: user.name,
@@ -73,7 +73,7 @@ const loginUser = async (req, res) => {
                 token: generateToken(user._id),
             });
         } else {
-            // ❌ Invalid credentials
+            //   Invalid credentials
             res.status(401).json({ message: 'Invalid email or password' });
         }
     } catch (error) {

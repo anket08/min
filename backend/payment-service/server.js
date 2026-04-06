@@ -27,12 +27,12 @@ app.get('/', (req, res) => res.send('💳 MINIT Payment Service is operational..
 // ── Kafka Event Consumer ─────────────────────────────────────────────────
 // This service starts working ONLY after inventory is confirmed
 connectKafka().then(() => {
-    console.log('✅ Payment Service Kafka Producer Ready');
+    console.log('  Payment Service Kafka Producer Ready');
     
     // Subscribe to INVENTORY_CHECKED to trigger the payment process
     consumeEvent(TOPICS.INVENTORY_CHECKED, 'payment-group', paymentConsumer, { maxRetries: 3 });
 }).catch(err => {
-    console.error('❌ Kafka Initialization Failed:', err.message);
+    console.error('  Kafka Initialization Failed:', err.message);
 });
 
 // ── Start Server ─────────────────────────────────────────────────────────

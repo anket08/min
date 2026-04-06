@@ -22,7 +22,7 @@ const paymentHandler = async ({ parsedValue }) => {
 
         // ── Validate input ──────────────────────────────────────────────
         if (!eventId || !orderId) {
-            console.log('[Payment] ❌ Invalid event received:', parsedValue);
+            console.log('[Payment]   Invalid event received:', parsedValue);
             return;
         }
 
@@ -82,7 +82,7 @@ const paymentHandler = async ({ parsedValue }) => {
                 paymentStatus: 'completed',
             });
 
-            console.log(`[Payment] ✅ Payment successful for order ${orderId} — ₹${totalPrice}`);
+            console.log(`[Payment]   Payment successful for order ${orderId} — ₹${totalPrice}`);
         } else {
             await produceEvent(TOPICS.ORDER_STATUS_UPDATE, {
                 eventId,
@@ -91,11 +91,11 @@ const paymentHandler = async ({ parsedValue }) => {
                 status: 'cancelled',
             });
 
-            console.log(`[Payment] ❌ Payment failed for order ${orderId}`);
+            console.log(`[Payment]   Payment failed for order ${orderId}`);
         }
 
     } catch (error) {
-        console.error('[Payment] ❌ Error processing event:', error);
+        console.error('[Payment]   Error processing event:', error);
         throw error; // re-throw so Kafka retry / DLQ picks it up
     }
 };

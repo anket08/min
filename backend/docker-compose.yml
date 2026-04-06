@@ -34,6 +34,7 @@ services:
       - "6379:6379" 
  # --- MICROSERVICES ---
   auth-service:
+    # build: ./auth-service
     image: backend-auth-service
     container_name: minit-auth-service
     ports:

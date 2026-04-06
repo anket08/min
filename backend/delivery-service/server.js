@@ -26,12 +26,12 @@ app.get('/', (req, res) => res.send('🚚 MINIT Delivery Service is active...'))
 // ── Kafka Event Consumer ─────────────────────────────────────────────────
 // This service starts working once a payment is confirmed
 connectKafka().then(() => {
-    console.log('✅ Delivery Service Kafka Producer Ready');
+    console.log('  Delivery Service Kafka Producer Ready');
     
     // Subscribe to PAYMENT_COMPLETED to trigger delivery assignment
     consumeEvent(TOPICS.PAYMENT_COMPLETED, 'delivery-group', deliveryConsumer, { maxRetries: 3 });
 }).catch(err => {
-    console.error('❌ Kafka Initialization Failed:', err.message);
+    console.error('  Kafka Initialization Failed:', err.message);
 });
 
 // ── Start Server ─────────────────────────────────────────────────────────

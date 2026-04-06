@@ -32,12 +32,12 @@ app.get('/', (req, res) => res.send('📦 MINIT Inventory Service is operational
 // ── Kafka Event Consumer ─────────────────────────────────────────────────
 // This logic triggers when an order is created to "lock" or deduct stock
 connectKafka().then(() => {
-    console.log('✅ Inventory Service Kafka Producer Ready');
+    console.log('  Inventory Service Kafka Producer Ready');
     
     // Listening for 'order_created' to verify stock availability
     consumeEvent(TOPICS.ORDER_CREATED, 'inventory-group', inventoryConsumer, { maxRetries: 3 });
 }).catch(err => {
-    console.error('❌ Kafka Initialization Failed:', err.message);
+    console.error('  Kafka Initialization Failed:', err.message);
 });
 
 // ── Start Server ─────────────────────────────────────────────────────────

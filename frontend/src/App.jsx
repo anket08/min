@@ -38,7 +38,7 @@ const PrivateRoute = ({ children, roles }) => {
   if (roles && !roles.includes(user.role)) {
     return <Navigate to="/" />;                     // Wrong role? → redirect to home
   }
-  return children;                                  // ✅ Authorized → show the page
+  return children;                                  //   Authorized → show the page
 };
 
 // ========================================================================

@@ -16,9 +16,9 @@ const connectRedis = async () => {
         client = createClient({ url: process.env.REDIS_URL || 'redis://localhost:6379' });
         client.on('error', (err) => console.error('[Redis] Client error:', err.message));
         await client.connect();
-        console.log('✅ Redis connected');
+        console.log('  Redis connected');
     } catch (error) {
-        console.error('❌ Redis failed to connect:', error.message);
+        console.error(' Redis failed to connect:', error.message);
         client = null; // ensure we don't try to use a broken client
     }
 };

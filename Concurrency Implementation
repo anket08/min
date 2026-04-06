@@ -77,9 +77,9 @@ const connectKafka = async () => {
     producer = kafka.producer();
     try {
         await producer.connect();
-        console.log('✅ Kafka producer connected');
+        console.log('  Kafka producer connected');
     } catch (err) {
-        console.error('❌ Kafka producer failed to connect:', err.message);
+        console.error('  Kafka producer failed to connect:', err.message);
         // Producer failing is non-fatal at startup — it will error per-call
     }
 };
@@ -226,9 +226,9 @@ const connectKafka = async () => {
     producer = kafka.producer();
     try {
         await producer.connect();
-        console.log('✅ Kafka producer connected');
+        console.log('  Kafka producer connected');
     } catch (err) {
-        console.error('❌ Kafka producer failed to connect:', err.message);
+        console.error('  Kafka producer failed to connect:', err.message);
         // Producer failing is non-fatal at startup — it will error per-call
     }
 };
@@ -356,11 +356,11 @@ sequenceDiagram
     
     E1->>DB: findOneAndUpdate WHERE version=3
     E2->>DB: findOneAndUpdate WHERE version=3
-    DB-->>E1: ✅ Updated (v→4)
-    DB-->>E2: ❌ null (version mismatch)
+    DB-->>E1:   Updated (v→4)
+    DB-->>E2:   null (version mismatch)
     E2->>DB: Re-read order (v=4)
     E2->>DB: findOneAndUpdate WHERE version=4
-    DB-->>E2: ✅ Updated (v→5)
+    DB-->>E2:   Updated (v→5)
 ```
 
 > [!IMPORTANT]
@@ -384,7 +384,7 @@ const orderStatusHandler = async ({ parsedValue }) => {
 
         // ── Validate input ──────────────────────────────────────────────
         if (!eventId || !orderId) {
-            console.log('[Order] ❌ Invalid event received:', parsedValue);
+            console.log('[Order]   Invalid event received:', parsedValue);
             return;
         }
 
@@ -406,7 +406,7 @@ const orderStatusHandler = async ({ parsedValue }) => {
 
         // ── FIX: use findOneAndUpdate with _id ───────────────────────
         const updatedOrder = await Order.findOneAndUpdate(
-            { _id: orderId },   // ✅ FIXED HERE
+            { _id: orderId },   //   FIXED HERE
             update,
             { new: true }
         );
@@ -422,13 +422,13 @@ const orderStatusHandler = async ({ parsedValue }) => {
         }
 
         console.log(
-            `[Order] ✅ Order ${orderId} updated:`,
+            `[Order]   Order ${orderId} updated:`,
             update,
             reason ? `| reason: ${reason}` : ''
         );
 
     } catch (error) {
-        console.error('[Order] ❌ Error processing event:', error);
+        console.error('[Order]   Error processing event:', error);
     }
 };
 
@@ -471,7 +471,7 @@ const orderStatusHandler = async ({ parsedValue }) => {
 
         // ── Validate input ──────────────────────────────────────────────
         if (!eventId || !orderId) {
-            console.log('[Order] ❌ Invalid event received:', parsedValue);
+            console.log('[Order]   Invalid event received:', parsedValue);
             return;
         }
 
@@ -539,7 +539,7 @@ const orderStatusHandler = async ({ parsedValue }) => {
             if (updatedOrder) {
                 // ── Success ─────────────────────────────────────────────
                 console.log(
-                    `[Order] ✅ Order ${orderId} updated (v${currentOrder.version}→v${updatedOrder.version}):`,
+                    `[Order]   Order ${orderId} updated (v${currentOrder.version}→v${updatedOrder.version}):`,
                     update,
                     reason ? `| reason: ${reason}` : ''
                 );
@@ -564,7 +564,7 @@ const orderStatusHandler = async ({ parsedValue }) => {
         );
 
     } catch (error) {
-        console.error('[Order] ❌ Error processing event:', error);
+        console.error('[Order]   Error processing event:', error);
         throw error; // re-throw so Kafka retry / DLQ picks it up
     }
 };

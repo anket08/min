@@ -29,7 +29,7 @@ app.get('/', (req, res) => res.send('🛒 MINIT Order Service is running...'));
 // This consumer is the SOLE writer for order status changes.
 // It listens for: 'order_status_update' (emitted by Payment or Delivery)
 connectKafka().then(() => {
-    console.log('✅ Order Service Kafka Producer Ready');
+    console.log('  Order Service Kafka Producer Ready');
     
     consumeEvent(
         TOPICS.ORDER_STATUS_UPDATE, 
