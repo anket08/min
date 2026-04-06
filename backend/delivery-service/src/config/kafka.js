@@ -43,7 +43,7 @@ const connectKafka = async () => {
         console.log('✅ Kafka producer connected');
     } catch (err) {
         console.error('❌ Kafka producer failed to connect:', err.message);
-        // Producer failing is non-fatal at startup — it will error per-call
+        process.exit(1);
     }
 };
 
@@ -56,6 +56,13 @@ const connectKafka = async () => {
 // land on the SAME partition, giving sequential processing per order.
 const produceEvent = async (topic, payload) => {
     if (!producer) throw new Error('Kafka producer not initialised. Call connectKafka() first.');
+
+    // Ensure we are connected before sending (idempotent, fast if already connected)
+    try {
+        await producer.connect();
+    } catch (err) {
+        throw new Error('Kafka producer disconnected and failed to reconnect: ' + err.message);
+    }
 
     const envelope = {
         eventId: randomUUID(),
@@ -128,7 +135,7 @@ const consumeEvent = async (topic, groupId, handler, options = {}) => {
         });
     } catch (err) {
         console.error(`[Consumer ${groupId}] Failed to connect to Kafka: ${err.message}`);
-        // Do NOT fall back to an EventEmitter — surface the failure clearly.
+        process.exit(1);
     }
 };
 
