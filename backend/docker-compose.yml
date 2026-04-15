@@ -20,7 +20,7 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
 
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
 
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
@@ -31,4 +31,74 @@ services:
     image: redis:latest
     container_name: redis
     ports:
-      - "6379:6379"
+      - "6379:6379" 
+ # --- MICROSERVICES ---
+  auth-service:
+    # build: ./auth-service
+    image: backend-auth-service
+    container_name: minit-auth-service
+    ports:
+      - "5001:5001"
+    env_file: .env
+    depends_on:
+      - redis
+    restart: always
+
+  order-service:
+    image: backend-order-service
+    container_name: minit-order-service
+    ports:
+      - "5002:5002"
+    env_file: .env
+    depends_on:
+      - kafka
+      - redis
+    restart: always
+
+  inventory-service:
+    image: backend-inventory-service
+    container_name: minit-inventory-service
+    ports:
+      - "5003:5003"
+    env_file: .env
+    depends_on:
+      - kafka
+    restart: always
+
+  delivery-service:
+    image: backend-delivery-service
+    container_name: minit-delivery-service
+    ports:
+      - "5004:5004"
+    env_file: .env
+    depends_on:
+      - kafka
+    restart: always
+
+  payment-service:
+    image: backend-payment-service
+    container_name: minit-payment-service
+    ports:
+      - "5005:5005"
+    env_file: .env
+    depends_on:
+      - kafka
+    restart: always
+
+  admin-service:
+    image: backend-admin-service
+    container_name: minit-admin-service
+    ports:
+      - "5006:5006"
+    env_file: .env
+    depends_on:
+      - auth-service
+    restart: always
+
+  gateway-service:
+    image: backend-gateway-service
+    container_name: minit-gateway-service
+    ports:
+      - "5000:5000"
+    restart: always
+
