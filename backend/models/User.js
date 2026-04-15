@@ -12,10 +12,10 @@ const bcrypt = require('bcryptjs');    // bcrypt — for hashing passwords
 // A Collection = group of documents (like a table in SQL)
 // This schema creates a "users" collection in MongoDB
 const userSchema = mongoose.Schema({
-    name:     { type: String, required: true },                // user's name (required)
-    email:    { type: String, required: true, unique: true },  // unique email
+    name: { type: String, required: true },                // user's name (required)
+    email: { type: String, required: true, unique: true },  // unique email
     password: { type: String, required: true },                // hashed password
-    role:     {
+    role: {
         type: String,
         enum: ['student', 'vendor', 'delivery', 'admin'], // only these values allowed
         default: 'student'                                  // default role
@@ -24,10 +24,10 @@ const userSchema = mongoose.Schema({
 
 // --- MIDDLEWARE (Mongoose pre-save hook) ---
 // Runs BEFORE saving a document. Used here to hash the password.
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function () {
     // Only hash if password was changed (not on every save)
     if (!this.isModified('password')) {
-        next(); // skip hashing, move to save
+        return; // skip hashing, move to save
     }
     const salt = await bcrypt.genSalt(10);                // generate salt (10 rounds)
     this.password = await bcrypt.hash(this.password, salt); // hash the password

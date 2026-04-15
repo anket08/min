@@ -1,0 +1,163 @@
+﻿[dotenv@17.3.1] injecting env (3) from .env -- tip: ΓÜÖ∩╕Å  specify custom .env file path with { path: '/custom/path/.env' }
+≡ƒöä Attempting to connect to Kafka broker...
+node : {"level":"WARN",
+"timestamp":"2026-03-29
+T07:42:38.148Z","logger
+":"kafkajs","message":"
+KafkaJS v2.0.0 
+switched default 
+partitioner. To retain 
+the same partitioning 
+behavior as in 
+previous versions, 
+create the producer 
+with the option 
+\"createPartitioner: Pa
+rtitioners.LegacyPartit
+ioner\". See the 
+migration guide at http
+s://kafka.js.org/docs/m
+igration-guide-v2.0.0#p
+roducer-new-default-par
+titioner for details. 
+Silence this warning 
+by setting the 
+environment variable \"
+KAFKAJS_NO_PARTITIONER_
+WARNING=1\""}
+At line:1 char:1
++ node server.js 2>&1 
+| Out-File -FilePath 
+server_output.txt 
+-Encoding  ...
++ ~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: ({"level":"WAR   
+ N"...R_WARNING=1\"    
+"}:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+Server running on port 5000
+{"level":"ERROR","times
+tamp":"2026-03-29T07:42
+:38.177Z","logger":"kaf
+kajs","message":"[Conne
+ction] Connection 
+error: ","broker":"loca
+lhost:9092","clientId":
+"minit-backend","stack"
+:"AggregateError 
+[ECONNREFUSED]: \n    
+at internalConnectMulti
+ple 
+(node:net:1134:18)\n   
+ at 
+afterConnectMultiple 
+(node:net:1715:7)"}
+{"level":"ERROR","times
+tamp":"2026-03-29T07:42
+:38.178Z","logger":"kaf
+kajs","message":"[Broke
+rPool] Failed to 
+connect to seed 
+broker, trying another 
+broker from the list: 
+Connection error: ","re
+tryCount":0,"retryTime"
+:105}
+Redis error, using in-memory fallback: 
+{"level":"ERROR","times
+tamp":"2026-03-29T07:42
+:38.303Z","logger":"kaf
+kajs","message":"[Conne
+ction] Connection 
+error: ","broker":"loca
+lhost:9092","clientId":
+"minit-backend","stack"
+:"AggregateError 
+[ECONNREFUSED]: \n    
+at internalConnectMulti
+ple 
+(node:net:1134:18)\n   
+ at 
+afterConnectMultiple 
+(node:net:1715:7)"}
+{"level":"ERROR","times
+tamp":"2026-03-29T07:42
+:38.304Z","logger":"kaf
+kajs","message":"[Broke
+rPool] Failed to 
+connect to seed 
+broker, trying another 
+broker from the list: 
+Connection error: ","re
+tryCount":1,"retryTime"
+:202}
+Redis error, using in-memory fallback: 
+{"level":"ERROR","times
+tamp":"2026-03-29T07:42
+:38.592Z","logger":"kaf
+kajs","message":"[Conne
+ction] Connection 
+error: ","broker":"loca
+lhost:9092","clientId":
+"minit-backend","stack"
+:"AggregateError 
+[ECONNREFUSED]: \n    
+at internalConnectMulti
+ple 
+(node:net:1134:18)\n   
+ at 
+afterConnectMultiple 
+(node:net:1715:7)"}
+{"level":"ERROR","times
+tamp":"2026-03-29T07:42
+:38.592Z","logger":"kaf
+kajs","message":"[Broke
+rPool] Failed to 
+connect to seed 
+broker, trying another 
+broker from the list: 
+Connection error: ","re
+tryCount":2,"retryTime"
+:426}
+ΓÜá∩╕Å  Kafka broker not found. Using local EventEmitter fallback.
+[Consumer Fallback] inventory-group listening to topic: orders
+[Consumer Fallback] payment-group listening to topic: orders
+[Consumer Fallback] delivery-group listening to topic: orders
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+MongoDB Connected: ac-xddmsja-shard-00-02.i3nljza.mongodb.net
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 
+Redis error, using in-memory fallback: 

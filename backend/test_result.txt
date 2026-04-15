@@ -1,0 +1,2 @@
+STATUS: 201
+BODY: {"_id":"69c8d7830c074b5095860346","name":"X","email":"x1774770051352@x.com","role":"student"}

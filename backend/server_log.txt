@@ -1,0 +1,39 @@
+[STDOUT] [dotenv@17.3.1] injecting env (3) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+[STDOUT] 🔄 Attempting to connect to Kafka broker...
+[STDERR] {"level":"WARN","timestamp":"2026-03-29T07:45:19.120Z","logger":"kafkajs","message":"KafkaJS v2.0.0 switched default partitioner. To retain the same partitioning behavior as in previous versions, create the producer with the option \"createPartitioner: Partitioners.LegacyPartitioner\". See the migration guide at https://kafka.js.org/docs/migration-guide-v2.0.0#producer-new-default-partitioner for details. Silence this warning by setting the environment variable \"KAFKAJS_NO_PARTITIONER_WARNING=1\""}
+[STDOUT] Server running on port 5000
+[STDOUT] Redis error, using in-memory fallback: 
+[STDERR] {"level":"ERROR","timestamp":"2026-03-29T07:45:19.158Z","logger":"kafkajs","message":"[Connection] Connection error: ","broker":"localhost:9092","clientId":"minit-backend","stack":"AggregateError [ECONNREFUSED]: \n    at internalConnectMultiple (node:net:1134:18)\n    at afterConnectMultiple (node:net:1715:7)"}
+[STDERR] {"level":"ERROR","timestamp":"2026-03-29T07:45:19.160Z","logger":"kafkajs","message":"[BrokerPool] Failed to connect to seed broker, trying another broker from the list: Connection error: ","retryCount":0,"retryTime":100}
+[STDERR] {"level":"ERROR","timestamp":"2026-03-29T07:45:19.329Z","logger":"kafkajs","message":"[Connection] Connection error: ","broker":"localhost:9092","clientId":"minit-backend","stack":"AggregateError [ECONNREFUSED]: \n    at internalConnectMultiple (node:net:1134:18)\n    at afterConnectMultiple (node:net:1715:7)"}
+[STDERR] {"level":"ERROR","timestamp":"2026-03-29T07:45:19.330Z","logger":"kafkajs","message":"[BrokerPool] Failed to connect to seed broker, trying another broker from the list: Connection error: ","retryCount":1,"retryTime":230}
+[STDOUT] Redis error, using in-memory fallback: 
+[STDERR] {"level":"ERROR","timestamp":"2026-03-29T07:45:19.601Z","logger":"kafkajs","message":"[Connection] Connection error: ","broker":"localhost:9092","clientId":"minit-backend","stack":"AggregateError [ECONNREFUSED]: \n    at internalConnectMultiple (node:net:1134:18)\n    at afterConnectMultiple (node:net:1715:7)"}
+[STDERR] {"level":"ERROR","timestamp":"2026-03-29T07:45:19.602Z","logger":"kafkajs","message":"[BrokerPool] Failed to connect to seed broker, trying another broker from the list: Connection error: ","retryCount":2,"retryTime":426}
+[STDOUT] ⚠️  Kafka broker not found. Using local EventEmitter fallback.
+[STDOUT] [Consumer Fallback] inventory-group listening to topic: orders
+[Consumer Fallback] payment-group listening to topic: orders
+[Consumer Fallback] delivery-group listening to topic: orders
+[STDOUT] Redis error, using in-memory fallback: 
+[STDOUT] Redis error, using in-memory fallback: 
+[STDOUT] MongoDB Connected: ac-xddmsja-shard-00-00.i3nljza.mongodb.net
+[STDOUT] Redis error, using in-memory fallback: 
+[STDOUT] Redis error, using in-memory fallback: 
+[TEST] STATUS: 201 BODY: {"_id":"69c8d892a241107b18bd5214","name":"T","email":"t1774770322476@t.com","role":"student","token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5YzhkODkyYTI0MTEwN2IxOGJkNTIxNCIsImlhdCI6MTc3NDc3MDMyMiwiZXhwIjoxNzc3MzYyMzIyfQ.aTDXl6Vds2otXzfR3Tp2V0i1DNvCZAIfFD1bsdxnenc"}
+[STDOUT] Redis error, using in-memory fallback: 
+[STDOUT] Redis error, using in-memory fallback: 
+[STDOUT] Redis error, using in-memory fallback: 
+[STDOUT] Redis error, using in-memory fallback: 
+[STDOUT] Redis error, using in-memory fallback: 
+[STDOUT] Redis error, using in-memory fallback: 
+[STDOUT] Redis error, using in-memory fallback: 
+[STDOUT] Redis error, using in-memory fallback: 
+[STDOUT] Redis error, using in-memory fallback: 
+[STDOUT] Redis error, using in-memory fallback: 
+[STDOUT] Redis error, using in-memory fallback: 
+[STDOUT] Redis error, using in-memory fallback: 
+[STDOUT] Redis error, using in-memory fallback: 
+[STDOUT] Redis error, using in-memory fallback: 
+[STDOUT] Redis error, using in-memory fallback: 
+[STDOUT] Redis error, using in-memory fallback: 
+[STDOUT] Redis error, using in-memory fallback: 
